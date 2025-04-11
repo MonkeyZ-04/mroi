@@ -1,0 +1,4 @@
+.custom-select .react-select__control {
+    width: 250px !important;
+    height: 45px !important;
+  }

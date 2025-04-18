@@ -12,7 +12,7 @@ const Sidebar = ({ polygons, lines, rectangles, setSelectedShape, handleDeleteSh
             <span className='item' onClick={() => setSelectedShape({ type: 'poly', index })}>
               Polygon {index + 1}
             </span>
-            <span className='bin' onClick={() => handleDeleteShape('poly', index)} style={{ color: 'red', marginLeft: '10px' }}>
+            <span className='bin' onClick={() => handleDeleteShape('poly', index)} >
               <MdDeleteOutline className='delete_icon'/>
             </span>
           </div>
@@ -23,7 +23,7 @@ const Sidebar = ({ polygons, lines, rectangles, setSelectedShape, handleDeleteSh
             <span className='item' onClick={() => setSelectedShape({ type: 'line', index })}>
               Line {index + 1}
             </span>
-            <span className='bin' onClick={() => handleDeleteShape('line', index)} style={{ color: 'red', marginLeft: '10px' }}>
+            <span className='bin' onClick={() => handleDeleteShape('line', index)} >
               <MdDeleteOutline className='delete_icon'/>
             </span>
           </div>
@@ -34,7 +34,7 @@ const Sidebar = ({ polygons, lines, rectangles, setSelectedShape, handleDeleteSh
             <span className='item' onClick={() => setSelectedShape({ type: 'rect', index })}>
               Rectangle {index + 1}
             </span>
-            <span className='bin' onClick={() => handleDeleteShape('rect', index)} style={{ color: 'red', marginLeft: '10px' }}>
+            <span className='bin' onClick={() => handleDeleteShape('rect', index)} >
               <MdDeleteOutline className='delete_icon'/>
             </span>
           </div>

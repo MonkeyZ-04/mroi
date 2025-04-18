@@ -1,0 +1,21 @@
+version: "1"
+services:
+  roi_canvas_service:
+    build:
+      context: .
+      args:
+        ENVIRONMENT: staging
+    restart: unless-stopped
+    environment:
+      ROI_CANVAS_SERVICE_ENV: development
+      ROI_CANVAS_SERVICE_PROTOCOL: https
+      ROI_CANVAS_SERVICE_DOMAIN: localhost
+      DB_DATABASE: "ivs_service"
+      DB_USERNAME: "aiintern"
+      DB_PASSWORD: "Public@aiintern0"
+      DB_HOST: "192.168.100.83"
+      DB_PORT: 5432
+      DB_SCHEMA: "metthier"
+      NODE_ENV: staging
+    ports:
+      - 55024:55024

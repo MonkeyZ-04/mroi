@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback} from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Tools from './ToolsControl';
-import TimePicker from './TimePicker';
-import DrawingCanvas from './DrawingCanvas';
-import NavbarSearch from './Navbar';
-import ImageUploader from './ImageUploader';
-import Sidebar from './SideBar';
+import Tools from './ToolsControl.jsx';
+import TimePicker from './TimePicker.jsx';
+import DrawingCanvas from './DrawingCanvas.jsx';
+import NavbarSearch from './Navbar.jsx';
+import ImageUploader from './ImageUploader.jsx';
+import Sidebar from './SideBar.jsx';
 import '../styles/App.css';
 
 
 function App() {
   const [image, setImage] = useState(null);
   const [imageObj, setImageObj] = useState(null);
+  // image
   const [stageSize, setStageSize] = useState({ width: 800, height: 600, scale: 1 });
-  const [selectedTool, setSelectedTool] = useState('poly');
-
+  // drawing
+  const [selectedTool, setSelectedTool] = useState('line');
   const [currentPoints, setCurrentPoints] = useState([]);
   const [polygons, setPolygons] = useState([]);
   const [lines, setLines] = useState([]);
@@ -22,6 +23,15 @@ function App() {
   const [shapesData, setShapesData] = useState({ polygons: [], lines: [], rectangles: [] }); 
   const [firstPoint, setFirstPoint] = useState(null); 
   const [selectedShape, setSelectedShape] = useState({ type: null, index: null });
+  // timePicker
+  const [startTime, setStarttime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [confidence_threshold, setConfidentThreshold] = useState(0.5);
+  const [selectedCameraName, setSelectedCameraName] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+  // data config region database
+  const [regionAIConfig, setRegionAIConfig] = useState(null)
 
   const handleMouseDown = (e) => {
     // ตรวจสอบว่าเป็นคลิกซ้ายเท่านั้น
@@ -32,6 +42,8 @@ function App() {
   
     const stage = e.target.getStage();
     const mousePos = stage.getPointerPosition();
+
+    // reascale for get a real values of position
     const realX = mousePos.x / stageSize.scale;
     const realY = mousePos.y / stageSize.scale;
     const newPoint = [realX, realY];
@@ -57,7 +69,6 @@ function App() {
     }
   };
   
-
   const handleContextMenu = (e) => {
     if (e && e.evt) {
       e.evt.preventDefault(); // ปิดเมนู context ปกติ
@@ -78,6 +89,7 @@ function App() {
         ...shapesData,
         lines: [...shapesData.lines, currentPoints],
       });
+      setRegionAIConfig(convertShapesToRegionAIConfig());
       setCurrentPoints([]); // รีเซ็ต currentPoints เพื่อเริ่มการวาดใหม่
     }
   };
@@ -136,24 +148,8 @@ function App() {
       setSelectedShape({ type: null, index: null });
     }
   };
-
-  const handleClosePolygon = () => {
-    if (currentPoints.length >= 6) {
-      const pointPairs = [];
-      for (let i = 0; i < currentPoints.length; i += 2) {
-        pointPairs.push([currentPoints[i], currentPoints[i + 1]]);
-      }
   
-      setPolygons([...polygons, pointPairs]);
-      setShapesData({
-        ...shapesData,
-        polygons: [...shapesData.polygons, pointPairs]
-      });
-      setCurrentPoints([]);
-    }
-  };
-  
-  const updateStageSize = () => {
+  const updateStageSize = useCallback(() => {
     if (imageObj) {
       const scale = Math.min(
         window.innerWidth * 0.8 / imageObj.width,
@@ -165,7 +161,49 @@ function App() {
         scale: scale,
       });
     }
-  };
+  }, [imageObj]);
+
+  const convertShapesToRegionAIConfig = () => {
+    const newRules = [];
+  
+    shapesData.polygons.forEach(points => {
+      newRules.push({
+        type: 'intrusion',
+        points,
+        schedule: {
+          start_time: startTime || "00:00:00",
+          end_time: endTime || "23:59:59",
+        },
+        confidence_threshold: 0.5, // หรือกำหนดจาก UI ก็ได้
+      });
+    });
+  
+    shapesData.lines.forEach(points => {
+      newRules.push({
+        type: 'tripwire',
+        points,
+        schedule: {
+          start_time: startTime || "00:00:00",
+          end_time: endTime || "23:59:59",
+        },
+        confidence_threshold: 0.5,
+      });
+    });
+  
+    shapesData.rectangles.forEach(points => {
+      newRules.push({
+        type: 'zoom',
+        points,
+        schedule: {
+          start_time: startTime || "00:00:00",
+          end_time: endTime || "23:59:59",
+        },
+        confidence_threshold: 0.5,
+      });
+    });
+  
+    return { rule: newRules };
+  };  
 
   useEffect(() => {
     if (image) {
@@ -176,19 +214,76 @@ function App() {
   }, [image]);
 
   useEffect(() => {
-
     updateStageSize();
     window.addEventListener("resize", updateStageSize);
     return () => window.removeEventListener("resize", updateStageSize);
-  }, [imageObj]);
+  }, [updateStageSize]);
+  
 
   useEffect(() => {
-    console.log('ROI in this Image', JSON.stringify(shapesData, null, 2));
+    console.log('Region in this Image', JSON.stringify(shapesData, null, 2));
   }, [shapesData]);
+
+  useEffect(() =>{
+    if(regionAIConfig){
+      console.log("RegionAIConfig", JSON.stringify(regionAIConfig, null,2))
+    }
+  }),[regionAIConfig]
+
+  // database get information
+  useEffect(() => {
+    if (!selectedCameraName) return;
+  
+    fetch(`http://localhost:5000/api/region-config?customer=${selectedCustomer}&cameraName=${selectedCameraName}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("Fetched data from server:", data);
+      
+        const config = data[0]?.metthier_ai_config;
+      
+        if (!config || !Array.isArray(config.rule)) {
+          console.warn("Invalid config structure:", config);
+          return;
+        }
+      
+        setRegionAIConfig(config);
+      
+        const intrusionShapes = [];
+        const tripwireShapes = [];
+        const zoomShapes = [];
+      
+        config.rule.forEach(rule => {
+          const { type, points, schedule } = rule;
+      
+          if (!Array.isArray(points)) return;
+      
+          if (type === 'intrusion') {
+            intrusionShapes.push(points);
+          } else if (type === 'tripwire') {
+            tripwireShapes.push(points);
+          } else if (type === 'zoom' && points.length === 2) {
+            zoomShapes.push(points);
+          }
+      
+          if (schedule?.start_time && !startTime) setStarttime(schedule.start_time);
+          if (schedule?.end_time && !endTime) setEndTime(schedule.end_time);
+        });
+      
+        setPolygons(intrusionShapes);
+        setLines(tripwireShapes);
+        setRectangles(zoomShapes);
+        setShapesData({
+          polygons: intrusionShapes,
+          lines: tripwireShapes,
+          rectangles: zoomShapes,
+        });
+      })      
+  }, [selectedCameraName]);
+          
 
   return (
     <div className='contrainer'>
-      <NavbarSearch />
+      <NavbarSearch onCameraSelect={setSelectedCameraName} onCustomerSelect={setSelectedCustomer} />
       <div className='body_tools'>
         <Sidebar
           polygons={polygons}
@@ -227,7 +322,10 @@ function App() {
           </div>
           <div className="toolbar">
             <Tools selectedTool={selectedTool} onChange={handleToolChange} />
-            <TimePicker />
+            <TimePicker
+              onStartTimeChange={setStarttime}
+              onEndTimeChange={setEndTime}
+            />
           </div>
         </div>
       </div>

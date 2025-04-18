@@ -6,7 +6,7 @@ function SelectDropdown({ options, value, onChange, placeholder }) {
       <Select
         options={options}
         value={options.find(option => option.value === value)}
-        // onChange={(selected) => onChange(selected.value)}
+        onChange={(selected) => onChange(selected.value)}
         isSearchable
         placeholder={placeholder}
         styles={{minwidth:'250px'}}

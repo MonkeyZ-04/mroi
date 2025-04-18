@@ -3,7 +3,7 @@ import '../styles/tools_control.css';
 function Tools({ selectedTool, onChange }) {
   return (
     <div className='tools_box'>
-      <p className='title'>Select tools</p>
+      <p className='title'>Region Type</p>
       <label className="tool">
         <input
           type="radio"
@@ -12,17 +12,17 @@ function Tools({ selectedTool, onChange }) {
           checked={selectedTool === 'line'}
           onChange={onChange}
         />
-        Line
+        tripwire
       </label>
       <label  className="tool">
         <input
           type="radio"
           name="myRadio"
           value="poly"
-          checked={selectedTool === 'poly'}
+          checked={selectedTool === 'polygon'}
           onChange={onChange}
         />
-        Poly
+        intrusion
       </label>
       <label  className="tool">
         <input
@@ -32,7 +32,7 @@ function Tools({ selectedTool, onChange }) {
           checked={selectedTool === 'rect'}
           onChange={onChange}
         />
-        Rectangle
+        zoom
       </label>
     </div>
   );

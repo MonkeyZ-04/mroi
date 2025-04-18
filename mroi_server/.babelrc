@@ -1,0 +1,34 @@
+{
+    "presets": ["@babel/preset-env"],
+    "sourceMaps": "inline",
+    "plugins": [
+      [
+        "module-resolver",
+        {
+          "alias": {
+            "@apis": "./server/apis",
+            "@bin": "./server/bin",
+            "@controllers": "./server/controllers",
+            "@models": "./server/models",
+            "@middlewares": "./server/middlewares",
+            "@configs": "./server/configs",
+            "@repositories": "./server/repositories",
+            "@routes": "./server/routes",
+            "@templates": "./server/templates",
+            "@utils": "./server/utils",
+            "@exceptions": "./server/exceptions",
+            "@events": "./server/events",
+            "@keys": "./server/keys"
+          }
+        }
+      ],
+      ["source-map-support"],
+      [
+        "@babel/plugin-transform-runtime",
+        {
+          "version": "7.18.6"
+        }
+      ]
+    ]
+  }
+  

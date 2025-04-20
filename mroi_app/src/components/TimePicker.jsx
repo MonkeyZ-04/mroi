@@ -1,53 +1,99 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/TimePicker.css';
 
-function TimePicker({ onAdd }) {
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [confidentThreshold, setConfidentThreshold] = useState(0.5);
+function TimePicker({ onChangeAll, startTime, endTime, confidentThreshold }) {
+  const [localStartTime, setLocalStartTime] = useState(startTime || '');
+  const [localEndTime, setLocalEndTime] = useState(endTime || '');
+  const [localConfidentThreshold, setLocalConfidentThreshold] = useState(confidentThreshold ?? 0.5);
 
-  const handleAdd = () => {
-    if (!startTime || !endTime || confidentThreshold < 0 || confidentThreshold > 1) return;
-    onAdd({
-      start_time: startTime,
-      end_time: endTime,
-      confidence_threshold: confidentThreshold,
-    });
+  const prevValues = useRef({});
+
+  // Sync external props to local state when props change
+  useEffect(() => {
+    setLocalStartTime(startTime || '');
+  }, [startTime]);
+
+  useEffect(() => {
+    setLocalEndTime(endTime || '');
+  }, [endTime]);
+
+  useEffect(() => {
+    setLocalConfidentThreshold(confidentThreshold ?? 0.5);
+  }, [confidentThreshold]);
+
+  // Send updated values if they changed
+  useEffect(() => {
+    const newValues = {
+      startTime: localStartTime,
+      endTime: localEndTime,
+      confidentThreshold: localConfidentThreshold,
+    };
+
+    const prev = prevValues.current;
+    const changed =
+      prev.startTime !== newValues.startTime ||
+      prev.endTime !== newValues.endTime ||
+      prev.confidentThreshold !== newValues.confidentThreshold;
+
+    if (changed) {
+      prevValues.current = newValues;
+      if (onChangeAll) {
+        onChangeAll(newValues);
+      }
+    }
+  }, [localStartTime, localEndTime, localConfidentThreshold, onChangeAll]);
+
+  // Handlers
+  const handleStartTimeChange = (e) => {
+    setLocalStartTime(e.target.value);
+  };
+
+  const handleEndTimeChange = (e) => {
+    setLocalEndTime(e.target.value);
+  };
+
+  const handleConfidentChange = (e) => {
+    setLocalConfidentThreshold(parseFloat(e.target.value));
   };
 
   return (
     <div className='time_box'>
-      <p className='title'>Time & Confidence</p>
+      <p className='title'>Time</p>
+
       <div className="time">
         <label>Start Time:</label>
         <input
           type="time"
           step="1"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
+          value={localStartTime}
+          onChange={handleStartTimeChange}
+          required
         />
       </div>
+
       <div className="time">
         <label>End Time:</label>
         <input
           type="time"
           step="1"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
+          value={localEndTime}
+          onChange={handleEndTimeChange}
+          required
         />
       </div>
+
       <div className="time">
-        <label>Confident:</label>
+        <label>Confidence:</label>
         <input
           type="number"
           step="0.01"
           min="0"
           max="1"
-          value={confidentThreshold}
-          onChange={(e) => setConfidentThreshold(parseFloat(e.target.value))}
+          value={localConfidentThreshold}
+          onChange={handleConfidentChange}
+          required
         />
       </div>
-      <button onClick={handleAdd}>Add</button>
     </div>
   );
 }

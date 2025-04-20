@@ -2,7 +2,7 @@
     min-height: 600px;
     height: auto;
     width: 20%;
-    margin: 20px 20px 20px 20px;
+    margin: 10px 10px;
     box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em;
     border-radius: 10px;
 }
@@ -12,24 +12,41 @@
     flex-direction: row;
     justify-content: space-between;
     box-shadow: rgba(27, 31, 35, 0.04) 0px 1px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px inset;
-    padding: 0px 15px;
+    padding: 0px 5px;
     border-radius: 10px;
     transition: box-shadow 0.3s ease-in-out; 
+    flex-wrap: wrap;
+}
+.items_in_sidebar:hover {
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+    cursor: pointer;
 }
 .item{
     height: 100%;
-    min-width:  55%;
+    min-width:  35%;
     width: auto;
     margin: 15px;
+    font-size: 15px;
 }
 .bin{
-    margin: 15px;
+    margin: 7.5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
-.items_in_sidebar:hover {
-    box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 2px 0px;
-    cursor: pointer;
+.edit{
+    margin: 7.5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
+
 .delete_icon{
     color: rgb(246, 138, 29);
     font-size: 25px;
 }
+.Edit_icon{
+    color: rgb(246, 138, 29);
+    font-size: 25px ;
+}
+

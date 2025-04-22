@@ -12,7 +12,7 @@ function Tools({ selectedTool, onChange }) {
           checked={selectedTool === 'line'}
           onChange={onChange}
         />
-        tripwire
+        Tripwire
       </label>
       <label  className="tool">
         <input
@@ -22,7 +22,7 @@ function Tools({ selectedTool, onChange }) {
           checked={selectedTool === 'polygon'}
           onChange={onChange}
         />
-        intrusion
+        Intrusion
       </label>
       <label  className="tool">
         <input
@@ -32,7 +32,7 @@ function Tools({ selectedTool, onChange }) {
           checked={selectedTool === 'rect'}
           onChange={onChange}
         />
-        zoom
+        Zoom
       </label>
     </div>
   );

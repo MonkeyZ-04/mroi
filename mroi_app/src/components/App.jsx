@@ -1,19 +1,26 @@
 import React, { useState, useEffect, useCallback} from 'react';
+import { CiSaveDown1 } from "react-icons/ci";
+import { DownloadOutlined } from '@ant-design/icons';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { LuUndo2 } from "react-icons/lu";
+import { Button } from "antd";
 import Swal from 'sweetalert2';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Tools from './ToolsControl.jsx';
 import TimePicker from './TimePicker.jsx';
 import DrawingCanvas from './DrawingCanvas.jsx';
 import NavbarSearch from './Navbar.jsx';
-import ImageUploader from './ImageUploader.jsx';
 import Sidebar from './SideBar.jsx';
 import '../styles/App.css';
 
 
 function App() {
+  const [maxTotalResion,setMaxTotalRegion] = useState(6);
+  const [maxZoomRegion, setMaxZoomRegion] = useState(1);
+
   const [image, setImage] = useState(null);
   const [imageObj, setImageObj] = useState(null);
-  // image
+  // imageobj
   const [stageSize, setStageSize] = useState({ width: 800, height: 600, scale: 1 });
   // drawing
   const [selectedTool, setSelectedTool] = useState('line');
@@ -22,15 +29,15 @@ function App() {
   const [lines, setLines] = useState([]);
   const [rectangles, setRectangles] = useState([]);
   const [shapesData, setShapesData] = useState({ polygons: [], lines: [], rectangles: [] }); 
-  const [firstPoint, setFirstPoint] = useState(null); 
   const [selectedShape, setSelectedShape] = useState({ type: null, index: null });
   // timePicker
   const [startTime, setStartTime] = useState('00:00:00');
   const [endTime, setEndTime] = useState('23:59:59');
   const [confidenceThreshold, setConfidentThreshold] = useState(0.5)
   // for get data point
-  const [selectedCameraName, setSelectedCameraName] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomerSite, setSelectedCustomerSite] = useState(null)
+  const [selectedCameraName, setSelectedCameraName] = useState(null);
 
   // data config region database
   const [regionAIConfig, setRegionAIConfig] = useState({rule: []})
@@ -49,26 +56,46 @@ function App() {
     const realX = mousePos.x / stageSize.scale;
     const realY = mousePos.y / stageSize.scale;
     const newPoint = [realX, realY];
+
+    const totalShapesCount = shapesData.polygons.length + shapesData.lines.length + shapesData.rectangles.length;
+
+    if (totalShapesCount >= maxTotalResion) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Shape limit reached',
+        text: 'You can draw up to 6 shapes only.',
+      });
+      return;
+    }
+
+    if (selectedTool === 'rect' && shapesData.rectangles.length >= maxZoomRegion) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Zoom already added',
+        text: 'You can add only one zoom region.',
+      });
+      return;
+    }
   
     if (selectedTool === 'poly' || selectedTool === 'line') {
       const updatedPoints = [...currentPoints, newPoint];
       setCurrentPoints(updatedPoints);
     } else if (selectedTool === 'rect') {
-      if (firstPoint) {
-        const rectPoints = [firstPoint, newPoint];
-        setRectangles([...rectangles, rectPoints]);
-        setShapesData({
-          ...shapesData,
-          rectangles: [...shapesData.rectangles, rectPoints],
-        });
-        addShapeToRegionAIConfig('zoom',rectPoints); // add shape to regionAIConfig
-  
-        setFirstPoint(null);
-        setCurrentPoints([]);
-      } else {
-        setFirstPoint(newPoint);
-        setCurrentPoints([newPoint]);
-      }
+      const [x1, y1] = newPoint;
+    
+      const rectPoints = [x1,y1];
+      
+    
+      setRectangles([...rectangles, rectPoints]);
+      setShapesData({
+        ...shapesData,
+        rectangles: [...shapesData.rectangles, rectPoints],
+      });
+    
+      addShapeToRegionAIConfig('zoom', rectPoints); // add just x1,y1
+    
+      setCurrentPoints([]); // clear
+      // setFirstPoint(null);  // clear
     }
   };
   
@@ -76,7 +103,18 @@ function App() {
     if (e && e.evt) {
       e.evt.preventDefault(); // ปิดเมนู context ปกติ
     }
-  
+    
+    const totalShapesCount = shapesData.polygons.length + shapesData.lines.length + shapesData.rectangles.length;
+
+    if (totalShapesCount >= 6) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Shape limit reached',
+        text: 'You can draw up to 6 shapes only.',
+      });
+      return;
+    }
+
     if (selectedTool === 'poly' && currentPoints.length >= 3) {
       // สำหรับ Polygon: เมื่อคลิกขวาและมีจุดตั้งแต่ 3 จุดขึ้นไป
       setPolygons([...polygons, currentPoints]);
@@ -99,7 +137,7 @@ function App() {
       setCurrentPoints([]); // รีเซ็ต currentPoints เพื่อเริ่มการวาดใหม่
     }
   };
-  // for add shape to regionAIConfig
+  
   const addShapeToRegionAIConfig = (type, points) => {
     const newRule = {
       points: points,
@@ -136,21 +174,26 @@ function App() {
   };
   
   const handleUndo = () => {
-    if (rectangles.length > 0) {
-      const updated = [...rectangles];
-      updated.pop();
-      setRectangles(updated);
-      setShapesData({ ...shapesData, rectangles: updated });
-    } else if (lines.length > 0) {
-      const updated = [...lines];
-      updated.pop();
-      setLines(updated);
-      setShapesData({ ...shapesData, lines: updated });
-    } else if (polygons.length > 0) {
-      const updated = [...polygons];
-      updated.pop();
-      setPolygons(updated);
-      setShapesData({ ...shapesData, polygons: updated });
+    if(regionAIConfig.rule.length > 0 ){
+      const lastRule = regionAIConfig.rule[regionAIConfig.rule.length -1];
+      const lastType = lastRule.type;
+      const lastPoints = lastRule.points;
+
+      removeShapeFromRegionAIConfig(lastType, lastPoints);
+
+      if (lastType === 'zoom') {
+        const updated = rectangles.slice(0, -1);
+        setRectangles(updated);
+        setShapesData(prev => ({ ...prev, rectangles: updated }));
+      } else if (lastType === 'tripwire') {
+        const updated = lines.slice(0, -1);
+        setLines(updated);
+        setShapesData(prev => ({ ...prev, lines: updated }));
+      } else if (lastType === 'intrusion') {
+        const updated = polygons.slice(0, -1);
+        setPolygons(updated);
+        setShapesData(prev => ({ ...prev, polygons: updated }));
+      }  
     }
   };  
 
@@ -158,15 +201,6 @@ function App() {
     setSelectedTool(e.target.value);
     setCurrentPoints([]);
     setFirstPoint(null);
-  };
-
-  const handleImageUpload = (imgDataUrl) => {
-    setImage(imgDataUrl);
-    setPolygons([]);
-    setLines([]);
-    setRectangles([]);
-    setCurrentPoints([]);
-    setShapesData({ polygons: [], lines: [], rectangles: [] });
   };
 
   const handleDeleteShape = (type, index) => {
@@ -218,7 +252,7 @@ function App() {
         `<label for="swal-end">End Time (HH:mm:ss)</label><input id="swal-end" class="swal2-input" placeholder="End Time (HH:mm:ss)" value="${selectedRule.schedule.end_time}">`,
       focusConfirm: false,
       showCancelButton: true,
-      confirmButtonText: 'Save',
+      confirmButtonText: 'Save Edited',
       cancelButtonText: 'Cancel',
       preConfirm: () => {
         const confidence = document.getElementById('swal-confidence').value;
@@ -282,6 +316,25 @@ function App() {
 
   const updateStageSize = useCallback(() => {
     if (imageObj) {
+      if(imageObj.width<800 || imageObj.height<800){
+        Swal.fire({
+          title:'Warning',
+          text:`This snapshot looks like it is from a sub stream camera! Scale : ${imageObj.width} x ${imageObj.height}`,
+          icon: "warning",
+          draggable: true
+        });
+      }
+      else{
+        Swal.fire({
+          title:'Success!!',
+          text:`This snapshot Scale : ${imageObj.width} x ${imageObj.height}`,
+          icon: "success",
+          timer:3000,
+          showConfirmButton: false,
+          draggable: true
+        });
+      }
+
       const scale = Math.min(
         window.innerWidth * 0.8 / imageObj.width,
         window.innerHeight * 0.8 / imageObj.height
@@ -293,6 +346,43 @@ function App() {
       });
     }
   }, [imageObj]);
+
+  const handleTimePickerChange = (data) => {//for timepicker setdate
+    setStartTime(data.startTime);
+    setEndTime(data.endTime);
+    setConfidentThreshold(data.confidentThreshold);
+  };
+
+  const handleSave = async () =>{
+    const result = await Swal.fire({
+      title: "Confirm Save",
+      text: 'Do you want to save the changes?',
+      icon: 'question',
+      showCancelButton:true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Save',
+      cancelButtonText: 'Cancel',
+    });
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/save-region-config?customer=${selectedCustomer}&customerSite=${selectedCustomerSite}&cameraName=${selectedCameraName}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(regionAIConfig),
+        });
+  
+        if (response.ok) {
+          Swal.fire('Success!', 'Configuration saved successfully.', 'success');
+        } else {
+          Swal.fire('Error!', 'Failed to save configuration.', 'error');
+        }
+      } catch (error) {
+        Swal.fire('Error!', 'An error occurred while saving.', 'error');
+        console.error(error);
+      }
+    }
+  };
 
   useEffect(() => {// ดักข้อมูลของ shape ที่เลือก
     if (!regionAIConfig || !selectedShape.type || selectedShape.index === null) return;
@@ -316,11 +406,7 @@ function App() {
       const startTime = selectedRule.schedule?.start_time || '';
       const endTime = selectedRule.schedule?.end_time || '';
       const confidence = selectedRule.confidence_threshold || 0;
-  
-      console.log("▶ ข้อมูลของ shape ที่เลือก:");
-      console.log("startTime:", startTime);
-      console.log("endTime:", endTime);
-      console.log("confidence_threshold:", confidence);
+
   
       // ตั้งค่าลง state ถ้าต้องการ
       setStartTime(startTime);
@@ -343,48 +429,54 @@ function App() {
     window.addEventListener("resize", updateStageSize);
     return () => window.removeEventListener("resize", updateStageSize);
   }, [updateStageSize]);
-  
 
-  const handleTimePickerChange = (data) => {//for timepicker setdate
-    console.log('⏱ Updated from TimePicker:', data);
-    setStartTime(data.startTime);
-    setEndTime(data.endTime);
-    setConfidentThreshold(data.confidentThreshold);
-  };
-
-  useEffect(() =>{
+  useEffect(() =>{//show regionData
     if(regionAIConfig){
       console.log("RegionAIConfig", JSON.stringify(regionAIConfig, null,2))
     }
   }),[regionAIConfig]
 
-  // database get information
+  // fetch data from server
   useEffect(() => {
-    if (!selectedCameraName) return;
-  
-    fetch(`http://localhost:5000/api/region-config?customer=${selectedCustomer}&cameraName=${selectedCameraName}`)
+    if (!selectedCameraName || !selectedCustomerSite) return;
+    fetch(`http://localhost:5000/api/region-config?customer=${selectedCustomer}&customerSite=${selectedCustomerSite}&cameraName=${selectedCameraName}`)
       .then(res => res.json())
-      .then(data => {
-        console.log("Fetched data from server:", data);
-      
-        const config = data[0]?.metthier_ai_config;
-      
+      .then( async data => {
+        let config = data.config;
+        const rtsp_link = data.rtsp;
+
+        if (config === null) {// if dont have data 
+          config = {
+            rule: [],
+          };
+        }
+  
         if (!config || !Array.isArray(config.rule)) {
           console.warn("Invalid config structure:", config);
           return;
         }
-      
+
+        try {
+          const res = await fetch(`http://localhost:5000/snapshot?rtsp=${encodeURIComponent(rtsp_link)}`);
+          const blob = await res.blob();
+          const imageUrl = URL.createObjectURL(blob);
+          setImage(imageUrl);
+        } catch (err) {
+          console.error("Failed to fetch snapshot:", err);
+          return;
+        }
+  
         setRegionAIConfig(config);
-      
+  
         const intrusionShapes = [];
         const tripwireShapes = [];
         const zoomShapes = [];
-      
+  
         config.rule.forEach(rule => {
           const { type, points, schedule } = rule;
-      
+  
           if (!Array.isArray(points)) return;
-      
+  
           if (type === 'intrusion') {
             intrusionShapes.push(points);
           } else if (type === 'tripwire') {
@@ -392,11 +484,11 @@ function App() {
           } else if (type === 'zoom' && points.length === 2) {
             zoomShapes.push(points);
           }
-      
+  
           if (schedule?.start_time && !startTime) setStarttime(schedule.start_time);
           if (schedule?.end_time && !endTime) setEndTime(schedule.end_time);
         });
-      
+  
         setPolygons(intrusionShapes);
         setLines(tripwireShapes);
         setRectangles(zoomShapes);
@@ -405,13 +497,12 @@ function App() {
           lines: tripwireShapes,
           rectangles: zoomShapes,
         });
-      })      
-  }, [selectedCameraName]);
-          
+      });
+  }, [selectedCameraName, selectedCustomerSite]);
 
   return (
     <div className='contrainer'>
-      <NavbarSearch onCameraSelect={setSelectedCameraName} onCustomerSelect={setSelectedCustomer} />
+      <NavbarSearch onSiteSelect={setSelectedCustomerSite} onCameraSelect={setSelectedCameraName} onCustomerSelect={setSelectedCustomer} />
       <div className='body_tools'>
         <Sidebar
           polygons={polygons}
@@ -425,7 +516,7 @@ function App() {
         />
         <div className="image_input">
           {imageObj && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', cursor: 'crosshair'}}>
               <DrawingCanvas
                 imageObj={imageObj}
                 stageSize={stageSize}
@@ -443,28 +534,61 @@ function App() {
 
           <div className='button_control_image'>
             <div>
-              <ImageUploader onUpload={handleImageUpload} />
+              {(shapesData.polygons.length > 0 || shapesData.lines.length > 0 || shapesData.rectangles.length > 0) && (
+                // <button className="Save_button" onClick={handleSave} ><CiSaveDown1 className='save_logo'/> Save</button>
+                <Button type="primary" onClick={handleSave} shape="round" icon={<CiSaveDown1 className='save_logo' />} style={{ padding:'20px'}}>
+                  Save
+                </Button>
+              )}
             </div>
             <div>
               {(shapesData.polygons.length > 0 || shapesData.lines.length > 0 || shapesData.rectangles.length > 0) && (
-                <button className="upload_button" onClick={handleUndo}>Undo</button>
+                <button className="upload_button" 
+                  onClick={() => {
+                    Swal.fire({
+                      title: 'Are you sure?',
+                      text: 'Do you want to undo the last shape?',
+                      icon: 'warning',
+                      showCancelButton: true,
+                      confirmButtonColor: '#3085d6',
+                      cancelButtonColor: '#d33',
+                      confirmButtonText: 'Yes, undo it!',
+                      cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        handleUndo(); // Call your undo function
+                        Swal.fire('Undone!', 'The last shape has been removed.', 'success');
+                      }
+                    });
+                  }}
+                >
+                  <LuUndo2 className='save_logo'/> Undo
+                </button>
               )}
             </div>
           </div>
-          <div className="toolbar">
-            <Tools selectedTool={selectedTool} onChange={handleToolChange} />
-            <TimePicker 
-              startTime={startTime}
-              endTime={endTime}
-              confidentThreshold={confidenceThreshold}
-              onChangeAll={handleTimePickerChange}
-              regionAIConfig={regionAIConfig}
-              setRegionAIConfig={setRegionAIConfig}
-              handleEditShape={handleEditShape}
-            />
-          </div>
+          {(selectedCameraName)&& (
+            
+            <div className="toolbar">
+              <Tools selectedTool={selectedTool} onChange={handleToolChange} />
+              <TimePicker 
+                startTime={startTime}
+                endTime={endTime}
+                confidentThreshold={confidenceThreshold}
+                onChangeAll={handleTimePickerChange}
+                regionAIConfig={regionAIConfig}
+                setRegionAIConfig={setRegionAIConfig}
+                handleEditShape={handleEditShape}
+              />
+            </div>
+          )}
         </div>
       </div>
+      {/* <DotLottieReact
+        src="https://lottie.host/ae539215-9ce0-4972-a17d-41e340fb6344/Dboe3wtnUL.lottie"
+        loop
+        autoplay
+      /> */}
     </div>
   );
 }

@@ -39,10 +39,10 @@ const DrawingCanvas = ({
           <Line
             key={`poly-${i}`}
             points={poly.flatMap(([x, y]) => [x * stageSize.scale, y * stageSize.scale])}
-            stroke={selectedShape?.type === 'poly' && selectedShape.index === i ? 'white' : 'red'}
-            strokeWidth={3}
+            stroke={selectedShape?.type === 'poly' && selectedShape.index === i ? 'rgba(45, 244, 0, 1)' : 'red'}
+            strokeWidth={selectedShape?.type === 'poly' && selectedShape.index === i ? 6:3}
             closed
-            fill={selectedShape?.type === 'poly' && selectedShape.index === i ? 'rgba(255, 255, 255, 0.3)' : 'rgba(251, 126, 126, 0.2)'}
+            fill={selectedShape?.type === 'poly' && selectedShape.index === i ? 'rgba(45, 244, 0, 0.4)' : 'rgba(251, 126, 126, 0.2)'}
           />
         ))}
 
@@ -51,31 +51,36 @@ const DrawingCanvas = ({
           <Line
             key={`line-${i}`}
             points={line.flatMap(([x, y]) => [x * stageSize.scale, y * stageSize.scale])}
-            stroke={selectedShape?.type === 'line' && selectedShape.index === i ? 'white' : 'blue'}
-            strokeWidth={3}
+            stroke={selectedShape?.type === 'line' && selectedShape.index === i ? 'rgba(45, 244, 0, 1)' : 'blue'}
+            strokeWidth={selectedShape?.type === 'line' && selectedShape.index === i ? 6:3}
           />
         ))}
 
         {/* Rectangles */}
         {rectangles.map((rect, i) => {
           if (rect.length !== 2) return null;
-          const [[x1, y1], [x2, y2]] = rect;
+          const [x1, y1] = rect;
+          const width = 640;  
+          const height = 384;
+        
+          const x2 = x1 + width;
+          const y2 = y1 + height;
 
           const rectPolygon = [
             x1, y1,
             x2, y1,
             x2, y2,
             x1, y2
-          ].map((v, idx) => (v * stageSize.scale));
+          ].map((v, idx) => (v * stageSize.scale)); // for map real scale
 
           return (
             <Line
               key={`rect-${i}`}
               points={rectPolygon}
-              stroke={selectedShape?.type === 'rect' && selectedShape.index === i ? 'white' : 'gold'}
-              strokeWidth={3}
+              stroke={selectedShape?.type === 'rect' && selectedShape.index === i ? 'rgba(45, 244, 0, 1)' : 'gold'}
+              strokeWidth={selectedShape?.type === 'rect' && selectedShape.index === i ? 6:3}
               closed
-              fill={selectedShape?.type === 'rect' && selectedShape.index === i ? 'rgba(255, 255, 255, 0.3)' : 'rgba(246, 227, 149, 0.2)'}
+              fill={selectedShape?.type === 'rect' && selectedShape.index === i ? 'rgba(45, 244, 0, 0.4)' : 'rgba(246, 227, 149, 0.2)'}
             />
           );
         })}
@@ -97,8 +102,9 @@ const DrawingCanvas = ({
           />
         )}
 
-        {selectedTool === 'rect' && scaledCurrentPoints.length === 4 && (() => {
-          const [x1, y1, x2, y2] = scaledCurrentPoints;
+        {selectedTool === 'rect' && scaledCurrentPoints.length === 2 && (() => {
+          let [x1, y1] = scaledCurrentPoints[0];
+          let [x2, y2] = [x1+640, y1+384]
           const rectPoints = [x1, y1, x2, y1, x2, y2, x1, y2];
           return (
             <Line

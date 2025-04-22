@@ -9,7 +9,7 @@ const Sidebar = ({ polygons, lines, rectangles, setSelectedShape, handleDeleteSh
   const confirmDelete = async (type, index) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
-      text: 'Thisaction cannot be undone!',
+      text: 'This action cannot be undone!',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',

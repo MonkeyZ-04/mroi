@@ -23,53 +23,63 @@ const NavbarSearch = ({ onCameraSelect, onCustomerSelect, onSiteSelect }) =>{
           });
       }, []);
 
-    //   for get customer site form DB and show in dropdown Customer Site
+    //   for get customerSite
     useEffect(() => {
-        if (!selectedCustomer) return;
-      
-        const value = typeof selectedCustomer === 'string' 
-          ? selectedCustomer 
-          : selectedCustomer.value;
-      
-        const url = `http://localhost:5000/api/schemas/${value}`;
-        console.log("Fetching from:", url);
-      
-        fetch(url)
-          .then(res => res.json())
-          .then(data => {
-            // CustomerSite get All customer site from DB
-            // Remove duplicates from camera_site
-            const siteOptions = [...new Map(
-              (data || [])
-                .filter(d => d.camera_site && d.camera_site.trim() !== '')
-                .map(site => [site.camera_site, {
-                  value: site.camera_site,
-                  label: site.camera_site
-                }])
-            ).values()];
-            setCustomerSite(siteOptions);
-      
-            // CameraName get All camera name from DB
-            const cameraOptions = (data || [])
-              .filter(d => d.camera_name && d.camera_name.trim() !== '')
-              .map(cam => ({
+      if (!selectedCustomer) return;
+    
+      const schema = typeof selectedCustomer === 'string' 
+        ? selectedCustomer 
+        : selectedCustomer.value;
+    
+      const url = `http://localhost:5000/api/schemas/${schema}`;
+    
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const cameraSiteOptions = [...new Map(
+            (data || [])
+              .filter(site => site.camera_site && site.camera_site.trim() !== '')
+              .map(site => [site.camera_site, {
+                value: site.camera_site,
+                label: site.camera_site
+              }])
+          ).values()];
+    
+          setCustomerSite(cameraSiteOptions);
+        })
+        .catch(err => console.error("Fetch error:", err));
+    }, [selectedCustomer]);
+
+    useEffect(() => {
+      if (!selectedCustomer || !selectedCustomerSite) return;
+    
+      const schema = typeof selectedCustomer === 'string' 
+        ? selectedCustomer 
+        : selectedCustomer.value;
+    
+      const site = typeof selectedCustomerSite === 'string'
+        ? selectedCustomerSite
+        : selectedCustomerSite.value;
+    
+      const url = `http://localhost:5000/api/get/camera_name?customer=${schema}&customerSite=${site}`;
+    
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const cameraNameOptions = [...new Map(
+            (data || [])
+              .filter(cam => cam.camera_name && cam.camera_name.trim() !== '')
+              .map(cam => [cam.camera_name, {
                 value: cam.camera_name,
                 label: cam.camera_name
-              }));
-            setCameraName(cameraOptions);
-          })
-          .catch(err => console.error("Fetch error:", err));
-      }, [selectedCustomer]);
+              }])
+          ).values()];
     
-    //   for control when setup all data
-      useEffect(() =>{
-        if(selectedCustomer && selectedCustomerSite && selectedCameraName){
-            console.log("Customer : ",selectedCustomer,"Customer Site : ",selectedCustomerSite,"Camera Name : ",selectedCameraName);
-        }
-      })
+          setCameraName(cameraNameOptions);
+        })
+        .catch(err => console.error("Fetch error:", err));
+    }, [selectedCustomer, selectedCustomerSite]);
           
-
-
     return (
         <Navbar bg='light' expand="lg" className="bg-body-tertiary">
             <Container>

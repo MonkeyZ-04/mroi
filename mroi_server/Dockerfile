@@ -7,20 +7,20 @@ RUN mkdir -p /usr/src/app/client
 
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN yarn install
+RUN npm install
 
 WORKDIR /usr/src/app/client
 COPY client/package*.json ./
-RUN yarn install
+RUN npm install
 
 WORKDIR /usr/src/app
 COPY . .
 
 WORKDIR /usr/src/app/client
-RUN yarn build:${ENVIRONMENT}
+RUN npm run build:${ENVIRONMENT}
 
 WORKDIR /usr/src/app
-RUN yarn build
-RUN sh clean.sh
+RUN npm run build
+RUN sh clean.sh 
 
-CMD ["yarn", "server"]
+CMD ["npm","run", "server"]

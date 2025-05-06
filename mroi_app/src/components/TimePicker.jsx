@@ -1,101 +1,90 @@
 import React, { useState, useEffect, useRef } from 'react';
-import '../styles/TimePicker.css';
+import { TimePicker, InputNumber } from 'antd';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 
-function TimePicker({ onChangeAll, startTime, endTime, confidentThreshold }) {
-  const [localStartTime, setLocalStartTime] = useState(startTime || '');
-  const [localEndTime, setLocalEndTime] = useState(endTime || '');
-  const [localConfidentThreshold, setLocalConfidentThreshold] = useState(confidentThreshold ?? 0.5);
+dayjs.extend(customParseFormat);
+
+function ATimePicker({ onChangeAll, startTime, endTime, confidenceThreshold }) {
+  const [localStartTime, setLocalStartTime] = useState(startTime ? dayjs(startTime, 'HH:mm:ss') : null);
+  const [localEndTime, setLocalEndTime] = useState(endTime ? dayjs(endTime, 'HH:mm:ss') : null);
+  const [localConfidenceThreshold, setLocalConfidenceThreshold] = useState(confidenceThreshold ?? 0.5);
 
   const prevValues = useRef({});
 
-  // Sync external props to local state when props change
+  // Sync external props to local state
   useEffect(() => {
-    setLocalStartTime(startTime || '');
+    setLocalStartTime(startTime ? dayjs(startTime, 'HH:mm:ss') : null);
   }, [startTime]);
 
   useEffect(() => {
-    setLocalEndTime(endTime || '');
+    setLocalEndTime(endTime ? dayjs(endTime, 'HH:mm:ss') : null);
   }, [endTime]);
 
   useEffect(() => {
-    setLocalConfidentThreshold(confidentThreshold ?? 0.5);
-  }, [confidentThreshold]);
+    setLocalConfidenceThreshold(confidenceThreshold ?? 0.5);
+  }, [confidenceThreshold]);
 
-  // Send updated values if they changed
-  useEffect(() => {
-    const newValues = {
-      startTime: localStartTime,
-      endTime: localEndTime,
-      confidentThreshold: localConfidentThreshold,
-    };
+  // Send updated values
+  // แก้ไข useEffect และ onChangeAll ใน ATimePicker.jsx
+useEffect(() => {
+  const newValues = {
+      startTime: localStartTime ? localStartTime.format('HH:mm:ss') : '',
+      endTime: localEndTime ? localEndTime.format('HH:mm:ss') : '',
+      confidenceThreshold: localConfidenceThreshold,
+  };
 
-    const prev = prevValues.current;
-    const changed =
+  const prev = prevValues.current;
+  const changed =
       prev.startTime !== newValues.startTime ||
       prev.endTime !== newValues.endTime ||
-      prev.confidentThreshold !== newValues.confidentThreshold;
+      prev.confidenceThreshold !== newValues.confidenceThreshold;
 
-    if (changed) {
+  if (changed) {
       prevValues.current = newValues;
       if (onChangeAll) {
-        onChangeAll(newValues);
+          onChangeAll(newValues);  // ส่งค่ากลับไปยัง parent
       }
-    }
-  }, [localStartTime, localEndTime, localConfidentThreshold, onChangeAll]);
+  }
+}, [localStartTime, localEndTime, localConfidenceThreshold, onChangeAll]);
 
-  // Handlers
-  const handleStartTimeChange = (e) => {
-    setLocalStartTime(e.target.value);
-  };
-
-  const handleEndTimeChange = (e) => {
-    setLocalEndTime(e.target.value);
-  };
-
-  const handleConfidentChange = (e) => {
-    setLocalConfidentThreshold(parseFloat(e.target.value));
-  };
 
   return (
-    <div className='time_box'>
-      <p className='title'>Time</p>
-
-      <div className="time">
+    <>
+      <div className="items_input">
         <label>Start Time:</label>
-        <input
-          type="time"
-          step="1"
-          value={localStartTime}
-          onChange={handleStartTimeChange}
-          required
-        />
+          <TimePicker
+            className='input_box'
+            value={localStartTime}
+            onChange={setLocalStartTime}
+            format="HH:mm:ss"
+            allowClear={false}
+          />
       </div>
-
-      <div className="time">
-        <label>End Time:</label>
-        <input
-          type="time"
-          step="1"
-          value={localEndTime}
-          onChange={handleEndTimeChange}
-          required
-        />
+      <div className="items_input">
+          <label>End Time:</label>
+          <TimePicker
+            className='input_box'
+            value={localEndTime}
+            onChange={setLocalEndTime}
+            format="HH:mm:ss"
+            allowClear={false}
+          />
       </div>
-
-      <div className="time">
-        <label>Confidence:</label>
-        <input
-          type="number"
-          step="0.01"
-          min="0"
-          max="1"
-          value={localConfidentThreshold}
-          onChange={handleConfidentChange}
-          required
-        />
+      <div className="items_input">
+          <label>Confidence:</label>
+          <InputNumber
+            className='input_box'
+            step={0.01}
+            min={0}
+            max={1}
+            value={localConfidenceThreshold}
+            onChange={setLocalConfidenceThreshold}
+          />
       </div>
-    </div>
+    </>
+    
   );
 }
 
-export default TimePicker;
+export default ATimePicker;

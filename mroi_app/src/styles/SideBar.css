@@ -1,10 +1,59 @@
 .side_bar{
-    min-height: 600px;
     height: auto;
-    width: 20%;
-    margin: 10px 10px;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    
+}
+.tools_select_box{
+    width: 100%;
+    height: auto;
+    margin-top: 15px;
     box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em;
     border-radius: 10px;
+    
+}
+.roi_list{
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    box-shadow: rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em;
+    border-radius: 10px;
+    
+}
+.roi_list_header{
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    width:100%;
+    height: 38px;
+    background-color: #ffffff;
+    border-radius: 10px 10px 0px 0px ;
+    border-bottom: .5px solid rgb(176, 175, 175); 
+}
+.tools_select_box .ant-collapse-header {
+    font-weight: 600;
+    font-size: 20px;
+}
+.roi_list_header p {
+    font-weight: 700;
+    margin-left: 14px;
+    font-size: 14px;
+    margin: 0px 0px 0px 20px;
+}
+.roi_list_items{
+    width: 100%;
+    min-height: 300px;
+    height: auto;
+}
+.still_not_drawed{
+    text-align: center;
+    color: #adb4c1;
+    font-size: 30px;
 }
 
 .items_in_sidebar {
@@ -12,41 +61,123 @@
     flex-direction: row;
     justify-content: space-between;
     box-shadow: rgba(27, 31, 35, 0.04) 0px 1px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px inset;
-    padding: 0px 5px;
-    border-radius: 10px;
+    background-color: #f3f7fd;
+    border-radius: 5px;
+    padding: 3px;
+    margin: 10px;
     transition: box-shadow 0.3s ease-in-out; 
     flex-wrap: wrap;
+    text-align: center;
 }
 .items_in_sidebar:hover {
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     cursor: pointer;
 }
-.item{
-    height: 100%;
-    min-width:  40%;
-    width: auto;
-    margin: 15px;
-    font-size: 19px;
+.item_name{
+    height: 45px;
+    width: 35%;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    padding-left: 10px;
+    gap: 5px;
+    font-size: 14px;
+
+}
+.item_type{
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+.tools_setup_item{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+}
+.tools_setup_item {
+    margin:0px 8px 0px 0px ;
 }
 .bin{
-    margin: 7.5px;
+    margin: 6px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 .edit{
-    margin: 7.5px;
+    margin: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.status_switch{
+    margin: 6px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .delete_icon{
-    color: rgb(246, 138, 29);
+    color: rgb(215, 14, 0);
     font-size: 25px;
 }
 .Edit_icon{
-    color: rgb(246, 138, 29);
+    color: #adb4c1;
     font-size: 25px ;
 }
+.select-region-type{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
 
+.button_select_tools{
+    width: 32%;
+    height: 35px;
+}
+.set_region_name p {
+    margin-bottom: 10px;
+  }
+  
+  .set_region_name{
+    margin-top: 10px;
+  }
+  .box_button_control_reion{
+    margin-top: 25px;
+    gap: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+  }
+  .button_control_reion{
+    width: 30%;
+    height: 45px;
+    margin-bottom: 20px;
+  }
+  .box_button_create_rule{
+    width: 100%;
+    height: auto;
+    padding: 10px;
+  }
+  .button_create_rule {
+    align-self: center;
+    width: 100%;
+    height: 45px;
+    font-size: 16px;
+    color: #fd6e2b !important;
+    border: 2px dashed #fd6e2b !important;
+    background-color: #ffeae0 !important;
+  }
+  
+  .button_create_rule:hover {
+    background-color: white  !important;
+    color: #f1560e !important;
+    border-color: #fd6e2b !important;
+  }
+  

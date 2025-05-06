@@ -1,0 +1,231 @@
+.container_tools {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #eff1f5;
+  padding: 0px 50px 50px 50px;
+}
+
+.header_tools_nav {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  width: 100%;
+  padding: 10px 0 10px 10px;
+  gap: 20px;
+}
+
+.header_tools_nav .ant-breadcrumb {
+  font-size: 15px;
+  margin-left: 10px;
+}
+
+.header_tools_nav a {
+  text-decoration: none;
+}
+
+.active_title {
+  font-weight: 400;
+  color: black;
+  transition: color ease-in 1s;
+}
+
+.cameraName_title {
+  font-size: 25px;
+  font-weight: 700;
+  color: black;
+  padding: 3px;
+  border-radius: 10px;
+  margin: 0;
+  transition: ease-in-out background-color 0.2s;
+}
+
+.cameraName_title:hover {
+  color: #000;
+  background-color: #f0f0f0;
+}
+
+.tools_box_main {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 90%;
+}
+
+.canvas_box {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px;
+  width: auto;
+  padding: 10px 0px 10px 10px;
+}
+
+.tools_side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  padding: 10px 0px;
+  width: 36%;
+}
+
+.edit_box {
+  height: 450px;
+  width: 90%;
+  margin-bottom: 50px;
+  padding-left: 10px;
+}
+
+.button_control {
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+}
+
+.button_control_image div {
+  margin-right: 10px;
+}
+
+.device_control {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.button_control_device {
+  margin-right: 15px;
+}
+
+.camera_info_box .ant-collapse-header {
+  font-weight: 600;
+  font-size: 20px;
+}
+
+.info_box {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.box_text_info {
+  display: flex;
+  flex-direction: row;
+  font-size: 18px;
+}
+
+.info_box_left,
+.info_box_right {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.text_info {
+  font-weight: 700;
+  padding-left: 10px;
+}
+.button_control{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.box_button_control_drawwing{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.button_control_drawwing{
+  background-color: white !important;
+  color: #fd6e2b !important;
+  border: 1px solid #fd6e2b !important ;
+}
+.save_button:hover{
+  background-color: white !important;
+  color: #fd6e2b !important;
+  border: 1px solid #fd6e2b !important ;
+}
+.save_button{
+  background-color: #fd6e2b;
+  color: white;
+  border-color: #fd6e2b;
+}
+.box_text_guild_drawEnd{
+  color: #3c82f6;
+}
+
+.footer_bar{
+  width: 100vw;
+  height: 64px;
+  display: flex;
+  justify-content: end;
+  background-color: white;
+  position:fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 100; /* เพิ่มเพื่อให้อยู่บนสุด หากมีเนื้อหาอื่น */
+}
+
+.box_bottom_save{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap:10px;
+  margin-right:20px;
+}
+/* ================== Responsive ================== */
+
+@media (max-width: 1200px) {
+  .canvas_box {
+    width: 100%;
+  }
+
+  .tools_side {
+    width: 100%;
+  }
+
+  .canvas_box{
+    padding: 0px;
+  }
+
+  .tools_box_main {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .edit_box {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container_tools {
+    padding: 0 20px;
+  }
+
+  .cameraName_title {
+    font-size: 20px;
+  }
+
+  .box_text_info {
+    flex-direction: column;
+    font-size: 16px;
+  }
+
+  .info_box_left,
+  .info_box_right {
+    width: 100%;
+  }
+
+  .edit_box {
+    height: auto;
+    min-height: 200px;
+  }
+}
+

@@ -3,15 +3,16 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const ffmpeg  = require('fluent-ffmpeg');
 const {PassThrough} = require('stream');
+const fs = require('fs');
+const path = require('path');
+
 require("dotenv").config();
 
 const app = express();
 const PORT = 5000;
-
 app.use(cors());
 app.use(express.json());
 
-// สร้าง PostgreSQL pool connection
 const pool = new Pool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -36,7 +37,8 @@ app.get("/api/schemas/:SchemaSite", async (req, res) => {
     console.log("SchemaSite", SchemaSite);
     try {
         const result = await pool.query(
-            `SELECT DISTINCT camera_site FROM ${SchemaSite}.iv_cameras`
+            // `SELECT DISTINCT camera_site FROM ${SchemaSite}.iv_cameras`
+            `SELECT * FROM ${SchemaSite}.iv_cameras`
         );
         res.json(result.rows);
     } catch (err) {
@@ -49,7 +51,8 @@ app.get("/api/get/camera_name", async (req, res) => {
   console.log("Schema : ",customer,"customer site",customerSite );
   try {
       const result = await pool.query(
-          `SELECT DISTINCT camera_name FROM ${customer}.iv_cameras WHERE camera_site = '${customerSite}'`
+          // `SELECT DISTINCT camera_name FROM ${customer}.iv_cameras WHERE camera_site = '${customerSite}'`
+          `SELECT * FROM ${customer}.iv_cameras WHERE camera_site = '${customerSite}'`
       );
       res.json(result.rows);
   } catch (err) {
@@ -73,7 +76,7 @@ app.get("/api/region-config", async (req, res) => {
     // This url is just an example, this realCode  result.rows[0].rtsp 
     // rtsp://mioc_cms:Mi0C2023Cms@10.54.1.3:554/cam/realmonitor?channel=5&subtype=0
     // result.rows[0].rtsp realCode 
-    rtsp_link = 'rtsp://mioc_cms:Mi0C2023Cms@10.54.1.3:554/cam/realmonitor?channel=5&subtype=1';
+    rtsp_link = 'rtsp://mioc_cms:Mi0C2023Cms@10.54.1.3:554/cam/realmonitor?channel=5&subtype=0';
 
     res.json({
       config: result.rows[0].metthier_ai_config || null,
@@ -116,6 +119,51 @@ app.get('/snapshot', (req, res) => {
     if (!res.headersSent) res.status(500).send("Internal server error");
   }
 });
+
+// const USE_LOCAL_IMAGE = true; // 🔧 toggle ตรงนี้ตอนอยู่บ้าน/บริษัท
+// const LOCAL_IMAGE_PATH = path.resolve('/Users/prasit.pai/Downloads/for_test/vlcsnap-2025-04-04-08h51m29s750.png'); // รูปที่เตรียมไว้
+
+// app.get('/snapshot', (req, res) => {
+//   const { rtsp } = req.query;
+
+//   // ✅ ถ้าเปิดโหมดใช้รูปภาพทดสอบ ให้ส่งภาพจากไฟล์ไปเลย
+//   if (USE_LOCAL_IMAGE) {
+//     if (!fs.existsSync(LOCAL_IMAGE_PATH)) {
+//       return res.status(404).send("Test image not found");
+//     }
+//     res.type('image/jpeg');
+//     return fs.createReadStream(LOCAL_IMAGE_PATH).pipe(res);
+//   }
+
+//   // ✅ ปกติ: ใช้ FFmpeg ดึง snapshot จาก RTSP
+//   if (!rtsp) return res.status(400).send("RTSP URL is required");
+
+//   try {
+//     const stream = new PassThrough();
+//     res.type('image/jpeg');
+
+//     ffmpeg(rtsp)
+//       .inputOptions('-rtsp_transport tcp')
+//       .outputOptions([
+//         '-vf fps=1',
+//         '-t 1',
+//         '-ss 00:00:01'
+//       ])
+//       .frames(1)
+//       .format('image2')
+//       .outputOptions('-q:v 2')
+//       .on('error', err => {
+//         console.error("FFmpeg error:", err);
+//         if (!res.headersSent) res.status(500).send("Failed to capture snapshot");
+//       })
+//       .pipe(stream);
+
+//     stream.pipe(res);
+//   } catch (err) {
+//     console.error("Snapshot error:", err);
+//     if (!res.headersSent) res.status(500).send("Internal server error");
+//   }
+// });
 
 
 app.post("/api/save-region-config", async (req, res) => {

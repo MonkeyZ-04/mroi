@@ -107,9 +107,9 @@ useEffect(() => {
             </div>
 
             <ATimePicker
-              startTime={dataSelectedROI.schedule.start_time }
-              endTime={dataSelectedROI.schedule.end_time }
-              confidenceThreshold={dataSelectedROI.confidence_threshold }
+              startTime={dataSelectedROI.schedule?.start_time }
+              endTime={dataSelectedROI.schedule?.end_time  }
+              confidenceThreshold={dataSelectedROI.confidence_threshold  }
               onChangeAll={handleTimePickerChange}
             />
           </div>

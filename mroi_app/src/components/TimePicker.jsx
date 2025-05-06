@@ -6,6 +6,11 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
 
 function ATimePicker({ onChangeAll, startTime, endTime, confidenceThreshold }) {
+  useEffect(()=>{
+    console.log("from atimepicker",startTime,endTime,confidenceThreshold)
+    
+  },startTime,endTime,confidenceThreshold)
+  
   const [localStartTime, setLocalStartTime] = useState(startTime ? dayjs(startTime, 'HH:mm:ss') : null);
   const [localEndTime, setLocalEndTime] = useState(endTime ? dayjs(endTime, 'HH:mm:ss') : null);
   const [localConfidenceThreshold, setLocalConfidenceThreshold] = useState(confidenceThreshold ?? 0.5);

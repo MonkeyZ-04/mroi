@@ -142,22 +142,6 @@ function Tools() {
   
     setRegionAIConfig(updatedConfig);
   };
-  const removeShapeFromRegionAIConfig = (type, pointsToRemove) => {
-    if (!regionAIConfig || !Array.isArray(regionAIConfig.rule)) return;
-  
-    const updatedRules = regionAIConfig.rule.filter(rule => {
-      if (rule.type !== type) return true;
-  
-      // Compare points (check exact match)
-      const pointsMatch = JSON.stringify(rule.points) === JSON.stringify(pointsToRemove);
-      return !pointsMatch;
-    });
-  
-    setRegionAIConfig({
-      ...regionAIConfig,
-      rule: updatedRules,
-    });
-  };
 
   const handleDeleteShape = (type, index) => {
     setRegionAIConfig(prevConfig => {
@@ -195,8 +179,6 @@ function Tools() {
       rule: updatedRules,
     });
   };
-  
-  
 
   const updateStageSize = useCallback(() => {
     if (imageObj) {
@@ -218,15 +200,13 @@ function Tools() {
         });
       }
   
-      // Detect screen width for iPad or medium-sized screens
-
       let widthFactor = 0.534;//monitor
-      if (window.innerWidth >= 900 && window.innerWidth <= 1024) {
-        widthFactor = 0.90;//ipad air
-      }else if (window.innerWidth >= 786 && window.innerWidth <900){
-        widthFactor = 0.875;//pad pro
-      }else if (window.innerWidth >= 1440 && window.innerWidth < 1920){
+      if (window.innerWidth >= 1440 && window.innerWidth < 1920){
         widthFactor = 0.52;//mac
+      }else if (window.innerWidth >= 900 && window.innerWidth <= 1024) {
+        widthFactor = 0.88;//ipad pro
+      }else if (window.innerWidth >= 786 && window.innerWidth <900){
+        widthFactor = 0.99;//pad air
       }
   
       const scale = Math.min(
@@ -442,7 +422,7 @@ function Tools() {
                   <Button onClick ={() => { handleEditRegionTripwireAndIntrusion(),setEnableDraw(false)}} style={{ minWidth: '120px' }} className='save_button' variant="solid">
                     <SaveOutlined /> Save
                   </Button >
-                  <Button style={{ minWidth: '120px' }} onClick={()=>{handleResetPoints()}} color="danger" variant="outlined">
+                  <Button disabled={selectedShape.index === null}  style={{ minWidth: '120px' }} onClick={()=>{handleResetPoints()}} color="danger" variant="outlined">
                     clear
                   </Button>
                 </div>

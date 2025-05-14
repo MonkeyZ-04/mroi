@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Swal from 'sweetalert2';
 import '../styles/SideBar.css';
 import {v4 as uuidv4} from 'uuid';
-import ATimePicker from './timePicker.jsx';
 import { Collapse, Button, Input, Switch } from 'antd';
-import { ExpandOutlined, PlusOutlined, VerticalAlignMiddleOutlined,ImportOutlined ,FormOutlined,DeleteOutlined } from '@ant-design/icons';
+import { ExpandOutlined, PlusOutlined, VerticalAlignMiddleOutlined,ImportOutlined ,SisternodeOutlined,DeleteOutlined} from '@ant-design/icons';
 
 const Sidebar = ({ setSelectedShape, handleDeleteShape, regionAIConfig, 
   setRegionAIConfig, handleEditShape,addShapeToRegionAIConfig,maxTotalRegion,handleChangeStatus}) => {
@@ -52,12 +50,12 @@ const Sidebar = ({ setSelectedShape, handleDeleteShape, regionAIConfig,
         <div className="roi_list_items">
           {rule.length === 0 ? (
             <div className="still_not_drawed">
-              <DotLottieReact
-                src="https://lottie.host/ac8ba9cf-73f2-4df9-9ddf-4d2a01ccda87/cbQFtPjoBl.lottie"
-                loop
-                autoplay
-              />
-              <p>The ROI has not yet been created... </p>
+              <div>
+                <SisternodeOutlined className='no_region_icon' />
+              </div>
+              <div>
+                <p>The ROI has not yet been created... </p>
+              </div>
               <div className="box_button_create_rule">
                 {rule.length < maxTotalRegion && (
                   <Button onClick={()=>{
@@ -79,15 +77,15 @@ const Sidebar = ({ setSelectedShape, handleDeleteShape, regionAIConfig,
                   </span>
                   <span className='item_type' >
                     {region.type === 'intrusion' && <>
-                      <Button color='danger' variant="filled" style={{ borderColor:'#ff2e17' }}>
+                      <Button className='button_show_type' color='danger' variant="filled" style={{ borderColor:'#ff2e17' }}>
                         <ImportOutlined />  {region.type}
                       </Button></>}
                     {region.type === 'tripwire' && <>
-                      <Button  color='cyan' variant="filled" style={{ borderColor: '#00bcd4' }}>
+                      <Button className='button_show_type' color='cyan' variant="filled" style={{ borderColor: '#00bcd4' }}>
                         <VerticalAlignMiddleOutlined /> {region.type}
                       </Button></>}
                     {region.type === 'zoom' && <>
-                      <Button color='yellow' variant="filled" style={{ borderColor:'#f5c905'}}>
+                      <Button className='button_show_type' color='yellow' variant="filled" style={{ borderColor:'#f5c905'}}>
                         <ExpandOutlined /> {region.type}
                       </Button></>}
                   </span>
@@ -103,9 +101,6 @@ const Sidebar = ({ setSelectedShape, handleDeleteShape, regionAIConfig,
                           backgroundColor: region.status === 'ON' ? '#4fce66' : '#adb4c1',
                         }}
                       />
-                    </span>
-                    <span className='edit' onClick={() => handleEditShape(index, regionAIConfig, setRegionAIConfig, region.type)}>
-                      <FormOutlined className='Edit_icon' />
                     </span>
                     <span className='bin' onClick={() => confirmDelete(region.type , index)}>
                       <DeleteOutlined className='delete_icon' />

@@ -127,7 +127,7 @@ const DrawingCanvas = ({
               ].map((v) => (v * stageSize.scale));
 
               const labelX = (x1 ) * stageSize.scale;
-              const labelY = (y1-40 ) * stageSize.scale;
+              const labelY = (y1-50 ) * stageSize.scale;
 
               return (
                 <React.Fragment key={`zoom-${index}`}>

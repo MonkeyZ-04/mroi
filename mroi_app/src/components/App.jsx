@@ -3,7 +3,7 @@ import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import Tools from './tools_draw';
 import Devices from './devices';
-import  Navbar  from './navbar';
+import  Navbar  from './Navbar';
 
 function App() {
   return (

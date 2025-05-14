@@ -18,6 +18,8 @@ function SelectDropdown({ options, value, onChange, placeholder }) {
             '&:hover': { borderColor: '#999' },
             minHeight: '36px',
             width:'220px',
+            borderRadius:'7px',
+            border:'1.5px solid rgb(222, 222, 222)'
           }),
           menu: (base) => ({
             ...base,

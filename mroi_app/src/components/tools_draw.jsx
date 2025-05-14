@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback} from 'react';
 import {v4 as uuidv4} from 'uuid';
 import { Button ,Breadcrumb,Collapse } from "antd";
-import { LeftOutlined,RightOutlined, SaveOutlined, SignatureOutlined , InfoCircleOutlined } from '@ant-design/icons';
+import { LeftOutlined,RightOutlined, SaveOutlined, SignatureOutlined , InfoCircleOutlined} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -200,11 +200,11 @@ function Tools() {
         });
       }
   
-      let widthFactor = 0.534;//monitor
-      if (window.innerWidth >= 1440 && window.innerWidth < 1920){
-        widthFactor = 0.52;//mac
-      }else if (window.innerWidth >= 900 && window.innerWidth <= 1024) {
-        widthFactor = 0.88;//ipad pro
+      let widthFactor = 0.54;//monitor
+      if (window.innerWidth > 1200 && window.innerWidth < 1600){
+        widthFactor = 0.523;//mac
+      }else if (window.innerWidth >= 900 && window.innerWidth <= 1200) {
+        widthFactor = 0.89;//ipad pro
       }else if (window.innerWidth >= 786 && window.innerWidth <900){
         widthFactor = 0.99;//pad air
       }
@@ -397,7 +397,7 @@ function Tools() {
           <div className="canvas_box">
             <div className="draw_image">
               {imageObj && (
-                <div style={{ display: 'flex', justifyContent: 'center', cursor: 'crosshair', border: enableDraw ? '4px solid #3c82f6' : 'none'}}>
+                <div style={{ display: 'flex', justifyContent: 'center', cursor: 'crosshair', border: enableDraw ? '4px solid #3c82f6' : '4px solid #eff1f5'}}>
                   <DrawingCanvas
                     imageObj={imageObj}
                     stageSize={stageSize}

@@ -2,6 +2,7 @@ import React, { useState,useEffect } from "react";
 import { Input, Select, Tag } from "antd";
 import ATimePicker from "./timePicker";
 import "../styles/setup_editor.css";
+import {FileExcelOutlined } from '@ant-design/icons';
 import { data } from "react-router-dom";
 
 const ruleTypeOptions = [
@@ -68,7 +69,7 @@ useEffect(() => {
         </p>
       </div>
 
-      {dataSelectedROI && (
+      {dataSelectedROI ? (
         <div className="setup_body_box">
           <div className="setup_input_left">
             <div className="items_input">
@@ -128,6 +129,15 @@ useEffect(() => {
                 <p>{dataSelectedROI.created_by || "Prasit Paisan"}</p>
               </div>
             </div>
+          </div>
+        </div>
+      ):(
+        <div className="box_no_data">
+          <div >
+            <FileExcelOutlined className="no_data_icon"/>
+          </div>
+          <div className="no_data_alert">
+            No Data, Please Select any Rules
           </div>
         </div>
       )}

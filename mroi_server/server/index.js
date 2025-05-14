@@ -51,7 +51,6 @@ app.get("/api/get/camera_name", async (req, res) => {
   console.log("Schema : ",customer,"customer site",customerSite );
   try {
       const result = await pool.query(
-          // `SELECT DISTINCT camera_name FROM ${customer}.iv_cameras WHERE camera_site = '${customerSite}'`
           `SELECT * FROM ${customer}.iv_cameras WHERE camera_site = '${customerSite}'`
       );
       res.json(result.rows);

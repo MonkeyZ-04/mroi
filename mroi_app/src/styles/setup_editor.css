@@ -5,6 +5,7 @@
     flex-direction: column;
     justify-content: start;
     background-color: white;
+    box-shadow: rgba(9, 30, 66, 0.25) 0px 4px 4px -2px, rgba(9, 30, 66, 0.08) 0px 0px 0px 1px;
     border-radius: 10px;
 }
 
@@ -82,14 +83,16 @@
     height: 80%;
     display: flex;
     justify-content: flex-end;
+    flex-wrap: wrap;
     align-items: center;
 
 }
 .text_alert_change_type p{
-    font-size: 12px;
+    font-size: 10px;
     color: red;
     text-align: start;
-    width: 50%;
+
+    width: 50% ;
     
  }
  .create_by_label{
@@ -100,4 +103,23 @@
  }
  .create_by_label p{
     margin: 0px;
- }
+}
+.box_no_data{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+
+}
+.no_data_icon {
+    font-size: 40px;
+    color: #a4a4a4;
+}
+.no_data_alert{
+    color: #858585;
+    font-size: 18px;
+}
+  

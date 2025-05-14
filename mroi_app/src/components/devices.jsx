@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import SelectDropdown from "./select_dropdown";
 import TableComponent from "./table";
-import { Button } from "antd";
+import SelectDropdown from "./Select_dropdown";
+import { Button, Input } from "antd";
+const { Search } = Input;
 import "../styles/devices.css";
 
 function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
@@ -11,10 +12,10 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedCustomerSite, setSelectedCustomerSite] = useState(null);
   const [selectedCameraName, setSelectedCameraName] = useState(null);
-  const [deviceData, setDeviceData] = useState([]); 
+  const [deviceData, setDeviceData] = useState([]);
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
-    // Load customer options
     fetch("http://localhost:5000/api/schemas")
       .then((res) => res.json())
       .then((data) => {
@@ -39,11 +40,16 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
-        setDeviceData(data);
+        const uniqueDevices = Array.from(
+          new Map(data.map((item) => [item.iv_camera_uuid, item])).values()
+        );
+
+        setDeviceData(uniqueDevices);
+        console.log(uniqueDevices)
 
         const cameraSiteOptions = [
           ...new Map(
-            (data || [])
+            uniqueDevices
               .filter((site) => site.camera_site?.trim() !== "")
               .map((site) => [
                 site.camera_site,
@@ -78,11 +84,16 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
     fetch(url)
       .then((res) => res.json())
       .then((data) => {
-        setDeviceData(data);
+        const uniqueDevices = Array.from(
+          new Map(data.map((item) => [item.iv_camera_uuid, item])).values()
+        );
+
+        setDeviceData(uniqueDevices);
+        console.log(uniqueDevices)
 
         const cameraNameOptions = [
           ...new Map(
-            (data || [])
+            uniqueDevices
               .filter((cam) => cam.camera_name?.trim() !== "")
               .map((cam) => [
                 cam.camera_name,
@@ -106,28 +117,38 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
     setCustomerSite([]);
     setCameraName([]);
     setDeviceData([]);
+    setSearchText("");
     onCustomerSelect?.(null);
     onSiteSelect?.(null);
     onCameraSelect?.(null);
   };
-  
 
-  const data = (deviceData || []).map((device, index) => {
-    const rules = device.metthier_ai_config?.rule || [];
+  const filteredData = deviceData
+    .filter((device) =>
+      device.camera_name?.toLowerCase().includes(searchText.toLowerCase())
+    )
+    .map((device, index) => {
+      const rules = device.metthier_ai_config?.rule || [];
 
-    return {
-      key: device.device_id || index,
-      workspace: selectedCustomer,
-      department: device.camera_site,
-      device_name: device.camera_name,
-      device_type: device.camera_type,
-      slugID: "intrusioncctv",
-      amountActivate: rules.filter((item) => item.status === "ON").length,
-      ROI_object: rules.length,
-      ROI_status: rules.some((item) => item.status === "ON"),
-      action: rules.length > 0,
-    };
-  });
+      return {
+        key: `${device.device_id}-${index}`,
+        workspace: selectedCustomer,
+        department: device.camera_site,
+        device_name: device.camera_name,
+        device_type: device.camera_type,
+        slugID: "intrusioncctv",
+        amountActivate: rules.filter((item) => item.status === "ON").length,
+        ROI_object: rules.length,
+        ROI_status: rules.some((item) => item.status === "ON"),
+        action: rules.length > 0,
+      };
+    });
+
+    useEffect(()=>{
+      if(deviceData){
+        console.log(deviceData.length)
+      }
+    },[deviceData])
 
   return (
     <div>
@@ -152,14 +173,12 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
               onSiteSelect?.(selected);
             }}
           />
-          <SelectDropdown
-            className="custom-select"
-            options={CameraName}
-            placeholder="Camera Name"
-            onChange={(selected) => {
-              setSelectedCameraName(selected);
-              onCameraSelect?.(selected);
-            }}
+          <Search
+            className="custom-search"
+            placeholder="Device name"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 200, height: 38 }}
           />
           <Button color="primary" variant="text" onClick={handleClearFilter}>
             Clear filter
@@ -167,7 +186,7 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
         </div>
       </div>
       <div className="tabel">
-        <TableComponent data={data} />
+        <TableComponent data={filteredData} />
       </div>
     </div>
   );

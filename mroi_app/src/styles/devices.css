@@ -16,5 +16,20 @@
 .tabel {
     overflow-x: auto;
     max-height: 80vh;
-  }
- 
+}
+.custom-search input{
+    height: 38px !important;
+}
+.custom-search button{
+    height: 38px !important;
+    width: 38px !important ;
+}
+.ant-input-suffix{
+    width: 0;
+    height: 0;
+}
+
+
+
+
+  

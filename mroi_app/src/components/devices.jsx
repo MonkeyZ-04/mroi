@@ -9,10 +9,11 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
   const [Customer, setCustomer] = useState([]);
   const [CustomerSite, setCustomerSite] = useState([]);
   const [CameraName, setCameraName] = useState([]);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState();
   const [selectedCustomerSite, setSelectedCustomerSite] = useState(null);
   const [selectedCameraName, setSelectedCameraName] = useState(null);
   const [deviceData, setDeviceData] = useState([]);
+  const [tableData, setTableData] = useState([]);
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
@@ -20,9 +21,10 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
       .then((res) => res.json())
       .then((data) => {
         const customerOptions = data.map((schema) => ({
-          value: schema.schema_name,
-          label: schema.schema_name,
+          value: schema,
+          label: schema,
         }));
+        
         setCustomer(customerOptions);
       });
   }, []);
@@ -43,72 +45,58 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
         const uniqueDevices = Array.from(
           new Map(data.map((item) => [item.iv_camera_uuid, item])).values()
         );
-
+        
         setDeviceData(uniqueDevices);
-        console.log(uniqueDevices)
+        setTableData(uniqueDevices);
 
-        const cameraSiteOptions = [
+        const custumerSiteOptions = [
           ...new Map(
             uniqueDevices
               .filter((site) => site.camera_site?.trim() !== "")
               .map((site) => [
                 site.camera_site,
                 {
-                  value: site.camera_site,
-                  label: site.camera_site,
+                  value: site.camera_site === null ?  'null' : site.camera_site ,
+                  label: site.camera_site === null ?  'null' : site.camera_site ,
                 },
               ])
           ).values(),
         ];
-
-        setCustomerSite(cameraSiteOptions);
+        setCustomerSite(custumerSiteOptions);
+        console.log(custumerSiteOptions)
       })
       .catch((err) => console.error("Fetch error:", err));
   }, [selectedCustomer]);
 
   useEffect(() => {
-    if (!selectedCustomer || !selectedCustomerSite) return;
+    if (!selectedCustomerSite) return;
 
-    const schema =
-      typeof selectedCustomer === "string"
-        ? selectedCustomer
-        : selectedCustomer.value;
+    const site = selectedCustomerSite;
+    const uniqueDevices = deviceData.filter((datarows) => {
+      const cameraSite = datarows.camera_site?.trim() || "null";
+      return cameraSite === site;
+    });
 
-    const site =
-      typeof selectedCustomerSite === "string"
-        ? selectedCustomerSite
-        : selectedCustomerSite.value;
+    
+    setTableData(uniqueDevices)
 
-    const url = `http://localhost:5000/api/get/camera_name?customer=${schema}&customerSite=${site}`;
+    const cameraNameOptions = [
+      ...new Map(
+        uniqueDevices
+          .filter((cam) => cam.camera_name?.trim() !== "")
+          .map((cam) => [
+            cam.camera_name,
+            {
+              value: cam.camera_name,
+              label: cam.camera_name,
+            },
+          ])
+      ).values(),
+    ];
 
-    fetch(url)
-      .then((res) => res.json())
-      .then((data) => {
-        const uniqueDevices = Array.from(
-          new Map(data.map((item) => [item.iv_camera_uuid, item])).values()
-        );
+    setCameraName(cameraNameOptions);
 
-        setDeviceData(uniqueDevices);
-        console.log(uniqueDevices)
-
-        const cameraNameOptions = [
-          ...new Map(
-            uniqueDevices
-              .filter((cam) => cam.camera_name?.trim() !== "")
-              .map((cam) => [
-                cam.camera_name,
-                {
-                  value: cam.camera_name,
-                  label: cam.camera_name,
-                },
-              ])
-          ).values(),
-        ];
-
-        setCameraName(cameraNameOptions);
-      })
-      .catch((err) => console.error("Fetch error:", err));
-  }, [selectedCustomer, selectedCustomerSite]);
+  }, [selectedCustomerSite]);
 
   const handleClearFilter = () => {
     setSelectedCustomer(null);
@@ -117,13 +105,14 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
     setCustomerSite([]);
     setCameraName([]);
     setDeviceData([]);
+    setTableData([]);
     setSearchText("");
     onCustomerSelect?.(null);
     onSiteSelect?.(null);
     onCameraSelect?.(null);
   };
 
-  const filteredData = deviceData
+  const filteredData = tableData
     .filter((device) =>
       device.camera_name?.toLowerCase().includes(searchText.toLowerCase())
     )
@@ -141,14 +130,10 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
         ROI_object: rules.length,
         ROI_status: rules.some((item) => item.status === "ON"),
         action: rules.length > 0,
+        rtsp: device.rtsp,
+        regionAIconfig: device.metthier_ai_config || null
       };
     });
-
-    useEffect(()=>{
-      if(deviceData){
-        console.log(deviceData.length)
-      }
-    },[deviceData])
 
   return (
     <div>
@@ -158,7 +143,7 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
           <SelectDropdown
             className="custom-select"
             options={Customer}
-            placeholder="Customer"
+            placeholder="Workspace"
             onChange={(selected) => {
               setSelectedCustomer(selected);
               onCustomerSelect?.(selected);
@@ -167,7 +152,7 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
           <SelectDropdown
             className="customer-select"
             options={CustomerSite}
-            placeholder="Customer Site"
+            placeholder="Departments"
             onChange={(selected) => {
               setSelectedCustomerSite(selected);
               onSiteSelect?.(selected);

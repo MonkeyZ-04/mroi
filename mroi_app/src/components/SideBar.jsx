@@ -5,13 +5,17 @@ import {v4 as uuidv4} from 'uuid';
 import { Collapse, Button, Input, Switch } from 'antd';
 import { ExpandOutlined, PlusOutlined, VerticalAlignMiddleOutlined,ImportOutlined ,SisternodeOutlined,DeleteOutlined} from '@ant-design/icons';
 
-const Sidebar = ({ setSelectedShape, handleDeleteShape, regionAIConfig, 
-  setRegionAIConfig, handleEditShape,addShapeToRegionAIConfig,maxTotalRegion,handleChangeStatus}) => {
+const Sidebar = ({ selectedShape, setSelectedShape, handleDeleteShape, regionAIConfig, addShapeToRegionAIConfig, maxTotalRegion, handleChangeStatus}) => {
 
   const rule = regionAIConfig.rule;
+  useEffect(() =>{
+    if(selectedShape)
+      setSelectedItem(selectedShape.index)
+  },[selectedShape])
 
   const [configStatusButton,setConfigStatusButton] = useState({})
-  const { Panel } = Collapse;
+  const [selectedItem, setSelectedItem] = useState(null)
+  
   const confirmDelete = async (type, index) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
@@ -69,7 +73,7 @@ const Sidebar = ({ setSelectedShape, handleDeleteShape, regionAIConfig,
           ) : (
             <>
               {rule.map((region, index) => (
-                <div key={uuidv4()} className="items_in_sidebar" onClick={() => setSelectedShape({ type: region.type, index })}>
+                <div key={uuidv4()} className={selectedItem === index ? "items_in_sidebar_focus" : "items_in_sidebar"} onClick={() => setSelectedShape({ type: region.type, index })}>
                   <span className='item_name'>
                     {region.type === 'intrusion' && <><ImportOutlined />{region.name}</>}
                     {region.type === 'tripwire' && <><VerticalAlignMiddleOutlined />{region.name}</>}

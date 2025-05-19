@@ -18,12 +18,6 @@ const DrawingCanvas = ({
     ? currentPoints.flatMap(([x, y]) => [x * stageSize.scale, y * stageSize.scale])
     : [];
 
-  useEffect(() => {
-    if (regionAIConfig) {
-      console.log(regionAIConfig);
-    }
-  }, [regionAIConfig]);
-
   return (
     <Stage
       width={stageSize.width}

@@ -3,13 +3,19 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './components/App.jsx';
-import { BrowserRouter } from 'react-router-dom'; // ✅ เพิ่มตรงนี้
+import { BrowserRouter } from 'react-router-dom'; 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+//--------- this code will render two time just in develop mode  not in production mode --------
+// root.render( 
+//   <React.StrictMode>
+//     <BrowserRouter> 
+//       <App />
+//     </BrowserRouter>
+//   </React.StrictMode>
+// );
 root.render(
-  <React.StrictMode>
-    <BrowserRouter> 
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
+  <BrowserRouter> 
+    <App />
+  </BrowserRouter>
 );

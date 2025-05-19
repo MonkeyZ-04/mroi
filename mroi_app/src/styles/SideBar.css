@@ -94,6 +94,25 @@
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     cursor: pointer;
 }
+.items_in_sidebar_focus {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  box-shadow: rgba(27, 31, 35, 0.04) 0px 1px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px inset;
+  background-color: #f3f7fd;
+  border-radius: 5px;
+  border: 4px solid #3c82f6 ;
+  padding: 3px;
+  margin: 10px;
+  transition: box-shadow 0.3s ease-in-out; 
+  flex-wrap: wrap;
+  text-align: center;
+}
+.items_in_sidebar_focus:hover {
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  cursor: pointer;
+}
+
 .item_name{
     height: 45px;
     width: 40%;

@@ -1,15 +1,10 @@
 import React, { useState,useEffect } from "react";
 import { Input, Select, Tag } from "antd";
-import ATimePicker from "./timePicker";
+import ATimePicker from "./time_picker.jsx";
 import "../styles/setup_editor.css";
 import {FileExcelOutlined } from '@ant-design/icons';
 import { data } from "react-router-dom";
 
-const ruleTypeOptions = [
-  { value: "intrusion", label: "Intrusion", color: "red" },
-  { value: "tripwire", label: "Tripwire", color: "cyan" },
-  { value: "zoom", label: "Zoom", color: "yellow" },
-];
 
 const SetupEditor = ({
   dataSelectedROI,
@@ -17,10 +12,22 @@ const SetupEditor = ({
   handleTimePickerChange,
   setSelectedTool,
   handleResetPoints,
-  MAX_ZOOM_REGION
+  MAX_ZOOM_REGION,
+  zoomCount
 }) => {
+  // config type zoom can have just one
+  const ruleTypeOptions = [
+    { value: "intrusion", label: "Intrusion", color: "red" },
+    { value: "tripwire", label: "Tripwire", color: "cyan" },
+    { value: "zoom", label: "Zoom", color: "yellow" },
+  ]
+  const filteredRuleTypeOptions =
+    zoomCount >= MAX_ZOOM_REGION
+      ? ruleTypeOptions.filter((opt) => opt.value !== "zoom")
+      : ruleTypeOptions;
 
-  const defaultOption = dataSelectedROI?.type || ruleTypeOptions[1];
+
+  const defaultOption = dataSelectedROI?.type || filteredRuleTypeOptions[1];
 
   const [selectedRuleType, setSelectedRuleType] = useState({
     value: defaultOption.value,
@@ -28,7 +35,7 @@ const SetupEditor = ({
   });
 
   const handleRuleTypeChange = (option) => {
-    const match = ruleTypeOptions.find(o => o.value === option.value);
+    const match = filteredRuleTypeOptions.find(o => o.value === option.value);
     setSelectedRuleType({
       value: option.value,
       label: <Tag color={match.color}>{match.label}</Tag>,
@@ -48,7 +55,7 @@ const SetupEditor = ({
   };
 
 useEffect(() => {
-  const matchedOption = ruleTypeOptions.find(
+  const matchedOption = filteredRuleTypeOptions.find(
     (opt) => opt.value === dataSelectedROI?.type
   );
 
@@ -92,7 +99,7 @@ useEffect(() => {
                     handleRuleTypeChange(option),
                     setSelectedTool(option.value),
                     handleResetPoints()}}
-                options={ruleTypeOptions.map(opt => ({
+                options={filteredRuleTypeOptions.map(opt => ({
                   value: opt.value,
                   label: <Tag color={opt.color}>{opt.label}</Tag>,
                 }))}

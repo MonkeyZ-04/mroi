@@ -4,7 +4,7 @@
   width: 100%;
   min-height: 100vh;
   background-color: #eff1f5;
-  padding: 0px 50px 50px 50px;
+  padding: 0px 50px 100px 50px;
 }
 
 .header_tools_nav {
@@ -75,7 +75,8 @@
 }
 
 .edit_box {
-  height: 450px;
+  min-height: 450px;
+  height: auto;
   width: 90%;
   margin-bottom: 50px;
 }
@@ -190,6 +191,27 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.custom-ok-button-discard{
+  width: 25%;
+  background-color: #ffffff !important;
+  color: rgb(255, 0, 0) !important;
+  border-color: rgb(255, 0, 0) !important;
+}
+.custom-ok-button-discard:hover{
+  background-color: #ffd4d4 !important;
+  color: rgb(255, 0, 0) !important;
+  border-color: rgb(255, 0, 0) !important;
+}
+
+.custom-ok-button-save{
+  width: 25%;
+  
+}
+
+.custom-cancel-button{
+  width: 25%;
 }
 
 /* ================== Responsive ================== */

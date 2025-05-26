@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Stage, Layer, Image, Line,Text } from 'react-konva';
+import { Stage, Layer, Image, Line, Text} from 'react-konva';
 
 const DrawingCanvas = ({
   imageObj,
@@ -46,11 +46,17 @@ const DrawingCanvas = ({
 
               let labelX = 0;
               let labelY = 0;
+              let centerx = 0;
+              let centery = 0;
 
               if (dataRegion.points.length >= 2 && Array.isArray(dataRegion.points[0]) && Array.isArray(dataRegion.points[1])) {
                 const [x1, y1] = dataRegion.points[0].map((v) => v * stageSize.scale);
+                const [x2, y2] = dataRegion.points[1].map((v) => v * stageSize.scale);
+
                 labelX = (x1 );
                 labelY = (y1 ) ;
+                centerx = (x1+x2)/2;
+                centery = (y1+y2)/2;
               }
                     
               return (
@@ -64,9 +70,43 @@ const DrawingCanvas = ({
                     x={labelX + 10}
                     y={labelY - 17}
                     text={`${dataRegion.name}`}
-                    fontSize={16}
-                    strokeWidth={40}
+                    fontSize={17}
+                    fontFamily="Tahoma" 
+                    shadowOffset={{ x: 0.6, y: 0.6 }}
                     fill={selectedShape?.type === 'tripwire' && selectedShape.index === index ? 'rgb(36, 233, 255)' : 'black'}
+                  />
+                </React.Fragment>
+              );
+            }
+            if (dataRegion.type === 'density') {
+              const points = dataRegion.points.flatMap(([x, y]) => [x * stageSize.scale, y * stageSize.scale]);
+          
+              let labelX = 0;
+              let labelY = 0;
+
+              if (dataRegion.points.length >= 2 && Array.isArray(dataRegion.points[0]) && Array.isArray(dataRegion.points[1])) {
+                const [x1, y1] = dataRegion.points[0].map((v) => v * stageSize.scale);
+                labelX = (x1 );
+                labelY = (y1 ) ;
+              }
+            
+              return (
+                <React.Fragment key={`Density-${index}`}>
+                  <Line
+                    points={points}
+                    stroke={selectedShape?.type === 'density' && selectedShape.index === index ? 'rgb(30, 57, 195)' : 'black'}
+                    strokeWidth={4}
+                    closed
+                    fill={selectedShape?.type === 'density' && selectedShape.index === index ? 'rgba(173, 198, 255, 0.4)' : 'rgba(0, 0, 0, 0)'}
+                  />
+                  <Text
+                    x={labelX + 5}
+                    y={labelY - 17}
+                    text={`${dataRegion.name}`}
+                    fontSize={17}
+                    fontFamily="Tahoma" 
+                    shadowOffset={{ x: 0.6, y: 0.6 }}
+                    fill={selectedShape?.type === 'density' && selectedShape.index === index ? 'rgb(30, 57, 195)' : 'black'}
                   />
                 </React.Fragment>
               );
@@ -96,7 +136,9 @@ const DrawingCanvas = ({
                     x={labelX + 5}
                     y={labelY - 17}
                     text={`${dataRegion.name}`}
-                    fontSize={16}
+                    fontSize={17}
+                    fontFamily="Tahoma" 
+                    shadowOffset={{ x: 0.6, y: 0.6 }}
                     fill={selectedShape?.type === 'intrusion' && selectedShape.index === index ? 'red' : 'black'}
                   />
                 </React.Fragment>
@@ -136,7 +178,9 @@ const DrawingCanvas = ({
                     x={labelX}
                     y={labelY}
                     text={`${dataRegion.name}`}
-                    fontSize={16}
+                    fontSize={17}
+                    fontFamily="Tahoma" 
+                    shadowOffset={{ x: 0.6, y: 0.6 }}
                     fill={selectedShape?.type === 'zoom' && selectedShape.index === index ? 'gold' : 'black'}
                   />
                 </React.Fragment>
@@ -161,6 +205,19 @@ const DrawingCanvas = ({
             dash={[10, 5]}
           />
         )}
+        {(selectedTool === 'density') && currentPoints.length > 0 && mousePosition && (
+          <Line
+            points={[
+              currentPoints[currentPoints.length - 1][0] * stageSize.scale,
+              currentPoints[currentPoints.length - 1][1] * stageSize.scale,
+              mousePosition.x,
+              mousePosition.y
+            ]}
+            stroke={'#1e39c3'}
+            strokeWidth={2}
+            dash={[10, 5]}
+          />
+        )}
 
         {/* วาดรูปร่างจริงที่กำลังสร้าง */}
         {selectedTool === 'intrusion' && scaledCurrentPoints.length >= 4 && (
@@ -170,7 +227,13 @@ const DrawingCanvas = ({
             strokeWidth={3}
           />
         )}
-
+        {selectedTool === 'density' && scaledCurrentPoints.length >= 4 && (
+          <Line
+            points={scaledCurrentPoints}
+            stroke="#1e39c3"
+            strokeWidth={3}
+          />
+        )}
         {selectedTool === 'tripwire' && scaledCurrentPoints.length >= 2 && (
           <Line
             points={scaledCurrentPoints}
@@ -178,7 +241,6 @@ const DrawingCanvas = ({
             strokeWidth={3}
           />
         )}
-
         {/* วาดกล่อง zoom */}
         {selectedTool === 'zoom' && currentPoints.length === 1 && (
           (() => {

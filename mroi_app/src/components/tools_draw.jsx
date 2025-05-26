@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Button, Breadcrumb, Collapse } from "antd";
+import { Button, Modal, Space, Breadcrumb } from 'antd';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { LeftOutlined, SaveOutlined, SignatureOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { LeftOutlined, SaveOutlined, SignatureOutlined, InfoCircleOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import 'antd/dist/reset.css';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -28,6 +29,8 @@ function Tools() {
     setSelectedCustomerSite(deviceData.department);
     setSelectedCameraName(deviceData.device_name);
     setRegionAIConfig(deviceData.regionAIconfig);
+
+    console.log(deviceData.regionAIconfig)
   
     const fetchSnapshot = async () => {
       try {
@@ -44,7 +47,7 @@ function Tools() {
   
     fetchSnapshot();
   }, [deviceData?.rtsp]);
-  
+
 
   const MAX_TOTAL_REGION = 6;
   const MAX_ZOOM_REGION = 1;
@@ -72,6 +75,24 @@ function Tools() {
   // for show line when drow
   const [mousePosition, setMousePosition] = useState(null);
 
+  // Modal 
+  const [openSaveModal, setOpenSaveModal] = useState(false)
+  const [openDiscardModal, setOpenDiscardModal] = useState(false)
+
+  const showModalSave = () =>{
+    setOpenSaveModal(true)
+  }
+  const showModalDiscard = () =>{
+    setOpenDiscardModal(true)
+  }
+
+  const closeModal = () =>{
+    setOpenDiscardModal(false)
+    setOpenSaveModal(false)
+  }
+  //================END================
+
+
   const handleMouseMove = (e) => {
     const stage = e.target.getStage();
     const pointer = stage.getPointerPosition();
@@ -89,10 +110,7 @@ function Tools() {
     const realY = mousePos.y / stageSize.scale;
     const newPoint = [realX, realY];
 
-    const totalShapesCount = regionAIConfig.rule.length;
-    const totalZoom = regionAIConfig.rule.filter((item) => item.type === 'zoom').length;
-
-    if (selectedTool === 'intrusion' || selectedTool === 'tripwire') {
+    if (selectedTool === 'intrusion' || selectedTool === 'tripwire' || selectedTool === 'density') {
       const updatedPoints = [...currentPoints, newPoint];
       setCurrentPoints(updatedPoints);
     } else if (selectedTool === 'zoom') {
@@ -108,7 +126,7 @@ function Tools() {
     }
   }
 
-  const handleEditRegionTripwireAndIntrusion = (e) => {
+  const handleEditIntrusion = (e) => {
     if (!dataSelectedROI || enableDraw === false) return;
 
     if (e && e.evt) {
@@ -117,7 +135,7 @@ function Tools() {
 
     const totalShapesCount = regionAIConfig.rule.length;
 
-    if (selectedTool === 'intrusion' && currentPoints.length >= 3) {
+    if ((selectedTool === 'intrusion'|| selectedTool === 'density') && currentPoints.length >= 3) {
       setDataSelectedROI(prev => ({
         ...prev,
         points: currentPoints,
@@ -133,21 +151,11 @@ function Tools() {
   };
 
   const handleDiscard = async ()=>{
-    const result = await Swal.fire({
-      title: "Discard Changes?",
-      text: "Are you sure you want to discard your changes?",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Discard',
-      cancelButtonText: 'Cancel',
-    });
-    if(result.isConfirmed){
-      setRegionAIConfig(deviceData.regionAIconfig)
-    }
+    setRegionAIConfig(deviceData.regionAIconfig);
+    setOpenDiscardModal(false)
   }
 
+  // create new item in rule 
   const addShapeToRegionAIConfig = (type, points) => {
     const index = regionAIConfig.rule.length;
     if (points === undefined && type === undefined) {
@@ -158,16 +166,19 @@ function Tools() {
     const newRule = {
       points: points,
       type: type,
-      schedule: {
-        start_time: '00:00:00',
-        end_time: '23:59:59',
-      },
+      schedule: [{ 
+        surveillance_id: uuidv4(), 
+        ai_type: "intrusion",
+        start_time: "00:00:00", 
+        end_time : "23:59:59",
+        direction:"Both",
+        confidence_threshold: 0.5,
+        duration_threshold_seconds : 0 }],
       created_date: new Date().toLocaleDateString("en-GB"),
       roi_id: uuidv4(),
       status: 'OFF',
       created_by: "Prasit Paisan",
       name: default_name,
-      confidence_threshold: 0.5,
     };
 
     const updatedConfig = {
@@ -187,8 +198,10 @@ function Tools() {
       };
     });
 
+
     if (selectedShape?.type === type && selectedShape?.index === index) {
       setSelectedShape({ type: null, index: null });
+      setDataSelectedROI(null)
     }
   };
 
@@ -235,9 +248,9 @@ function Tools() {
         });
       }
 
-      let widthFactor = 0.8;//monitor
+      let widthFactor = 0.54;//monitor
       if (window.innerWidth > 1200 && window.innerWidth < 1600) {
-        widthFactor = 0.53;//mac
+        widthFactor = 0.53;//mac 
       } else if (window.innerWidth >= 900 && window.innerWidth <= 1200) {
         widthFactor = 0.89;//ipad pro
       } else if (window.innerWidth >= 786 && window.innerWidth < 900) {
@@ -257,53 +270,30 @@ function Tools() {
     }
   }, [imageObj]);
 
-  const handleTimePickerChange = (data) => {//for timepicker setdate
-    const updatedSelectedROI = {
-      ...dataSelectedROI,
-      schedule: {
-        start_time: data.startTime,
-        end_time: data.endTime,
-      },
-      confidence_threshold: data.confidenceThreshold,
-    };
-
-    setDataSelectedROI(updatedSelectedROI);
-  };
-
   const handleSave = async () => {
-    const result = await Swal.fire({
-      title: "Confirm Save",
-      text: 'Do you want to save the changes?',
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Save',
-      cancelButtonText: 'Cancel',
-    });
-    if (result.isConfirmed) {
-      try {
-        const response = await fetch(`http://localhost:5000/api/save-region-config?customer=${selectedCustomer}&customerSite=${selectedCustomerSite}&cameraName=${selectedCameraName}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(regionAIConfig),
-        });
+    try {
+      const response = await fetch(`http://localhost:5000/api/save-region-config?customer=${selectedCustomer}&customerSite=${selectedCustomerSite}&cameraName=${selectedCameraName}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(regionAIConfig),
+      });
 
-        if (response.ok) {
-          Swal.fire({
-            title: 'Success!!',
-            icon: "success",
-            timer: 1000,
-            showConfirmButton: false,
-            draggable: true
-          });
-        } else {
-          Swal.fire('Error!', 'Failed to save configuration.', 'error');
-        }
-      } catch (error) {
-        Swal.fire('Error!', 'An error occurred while saving.', 'error');
-        console.error(error);
+      if (response.ok) {
+        Swal.fire({
+          title: 'Success!!',
+          icon: "success",
+          timer: 1000,
+          showConfirmButton: false,
+          draggable: true
+        });
+        //close modal
+        setOpenSaveModal(false);
+      } else {
+        Swal.fire('Error!', 'Failed to save configuration.', 'error');
       }
+    } catch (error) {
+      Swal.fire('Error!', 'An error occurred while saving.', 'error');
+      console.error(error);
     }
   };
 
@@ -324,7 +314,9 @@ function Tools() {
     if (selectedRule) {
       setDataSelectedROI(selectedRule);
     }
-  }, [selectedShape, regionAIConfig]);
+  }, [selectedShape]);
+  //=====Problem Max Re-render======
+  // }, [selectedShape, regionAIConfig]);ลบออกไปเพราะคิดว่า region ai config ไม่จำเป็นในการ set new data selected ROI
 
   useEffect(() => {
     if (image) {
@@ -362,9 +354,11 @@ function Tools() {
     const zoomCount = regionAIConfig.rule?.filter(item => item.type === 'zoom').length || 0;
     setZoomCount(zoomCount);
 
-  },[regionAIConfig])
+  },[regionAIConfig.rule])
+
   return (
     <>
+
       {imageObj ? (
         <div className="container_tools">
           <div className="header_tools_nav">
@@ -417,7 +411,7 @@ function Tools() {
                       selectedTool={selectedTool}
                       currentPoints={currentPoints}
                       onCanvasClick={handleEditRegionZoom}
-                      onRightClick={handleEditRegionTripwireAndIntrusion}
+                      onRightClick={handleEditIntrusion}
                       selectedShape={selectedShape}
                       regionAIConfig={regionAIConfig}
                       mousePosition={mousePosition}
@@ -436,7 +430,7 @@ function Tools() {
                   <div className="box_button_control_drawwing">
                     <Button
                       onClick={() => {
-                        handleEditRegionTripwireAndIntrusion();
+                        handleEditIntrusion();
                         setEnableDraw(false);
                       }}
                       style={{ minWidth: '120px' }}
@@ -445,6 +439,9 @@ function Tools() {
                     >
                       <SaveOutlined /> Save
                     </Button>
+
+
+
                     <Button
                       disabled={selectedShape.index === null}
                       style={{ minWidth: '120px' }}
@@ -492,7 +489,6 @@ function Tools() {
 
           <div className="edit_box">
             <SetupEditor
-              handleTimePickerChange={handleTimePickerChange}
               dataSelectedROI={dataSelectedROI}
               setDataSelectedROI={setDataSelectedROI}
               cameraName={selectedCameraName}
@@ -505,19 +501,48 @@ function Tools() {
 
           <div className="footer_bar">
             <div className="box_bottom_save">
+
+              {/* Discard button and Modal */}
               <Button 
                 style={{ minWidth: '120px' }}
                 color="danger" 
                 variant="outlined"
                 onClick={()=>{
-                  handleDiscard();
+                  showModalDiscard();
                 }}
                 >
                 Discard Change
               </Button>
+              <Modal
+                title={
+                  <span>
+                    <ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} />
+                    Are you sure you want to discard changes?
+                  </span>
+                }
+                open={openDiscardModal}
+                onOk={() =>{
+                  handleDiscard();
+                }}
+                onCancel={closeModal}
+                okText="Discard"
+                cancelText="Cancel"
+                okButtonProps={{
+                  className: 'custom-ok-button-discard',
+                }}
+                cancelButtonProps={{
+                  className: 'custom-cancel-button',
+                }}
+              >
+                <p>    This action cannot be undone</p>
+                
+              </Modal>
+
+              {/* Save button and Modal */}
+
               <Button
-                onClick={() => {
-                  handleSave();
+                onClick={()=>{
+                  showModalSave();
                 }}
                 style={{ minWidth: '120px' }}
                 className="save_button"
@@ -525,6 +550,30 @@ function Tools() {
               >
                 Apply
               </Button>
+              <Modal
+                title={
+                  <span>
+                    <ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} />
+                    Do you want to apply all these changes?
+                  </span>
+                }
+                open={openSaveModal}
+                onOk={() =>{
+                  handleSave();
+                }}
+                onCancel={closeModal}
+                okText="Confirm"
+                cancelText="Cancel"
+                okButtonProps={{
+                  className: 'custom-ok-button-save',
+                }}
+                cancelButtonProps={{
+                  className: 'custom-cancel-button',
+                }}
+              >
+                <p>    This will update your data & restart the device</p>
+                
+              </Modal>
             </div>
           </div>
         </div>

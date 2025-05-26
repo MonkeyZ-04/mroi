@@ -48,7 +48,7 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
         
         setDeviceData(uniqueDevices);
         setTableData(uniqueDevices);
-
+        
         const custumerSiteOptions = [
           ...new Map(
             uniqueDevices

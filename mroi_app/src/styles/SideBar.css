@@ -221,5 +221,21 @@
  .button_show_type{
     height: 1.8rem !important;
     width: 5.5rem !important;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
  }
+
+ .custom-ok-button-delete{
+  width: 25%;
+  background-color: #ffffff !important;
+  color: rgb(255, 0, 0) !important;
+  border-color: rgb(255, 0, 0) !important;
+}
+.custom-cancel-button{
+  width: 25%;
+}
+
   

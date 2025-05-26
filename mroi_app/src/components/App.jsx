@@ -4,6 +4,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 import Tools from './tools_draw';
 import Devices from './devices';
 import  Navbar  from './Navbar';
+import 'antd/dist/reset.css';
 
 function App() {
   return (

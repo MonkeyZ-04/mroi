@@ -1,4 +1,4 @@
-// src/components/App.jsx
+
 import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import Tools from './tools_draw';

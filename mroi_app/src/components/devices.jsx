@@ -1,54 +1,84 @@
 import React, { useState, useEffect } from "react";
 import TableComponent from "./table";
 import SelectDropdown from "./Select_dropdown";
-import { Button, Input } from "antd";
+import { Button, Input, Modal } from "antd";
 const { Search } = Input;
 import "../styles/devices.css";
 
 function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
   const [Customer, setCustomer] = useState([]);
   const [CustomerSite, setCustomerSite] = useState([]);
-  const [CameraName, setCameraName] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState();
   const [selectedCustomerSite, setSelectedCustomerSite] = useState(null);
-  const [selectedCameraName, setSelectedCameraName] = useState(null);
   const [deviceData, setDeviceData] = useState([]);
   const [tableData, setTableData] = useState([]);
   const [searchText, setSearchText] = useState("");
 
+  const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
+
+  const showErrorModal = (title, error) => {
+    Modal.error({
+      title: title,
+      content: (
+        <div>
+          <p style={{ marginBottom: '8px', color: '#ff4d4f' }}>
+            {error.message || 'An error occurred'}
+          </p>
+          <small style={{ color: '#666' }}>
+            Please try again or contact support if the problem persists
+          </small>
+        </div>
+      ),
+      okButtonProps: {
+        className: 'custom-ok-button-error'
+      }
+    });
+  };
+
   useEffect(() => {
-    fetch("http://localhost:5000/api/schemas")
-      .then((res) => res.json())
+    fetch(`${API_ENDPOINT}/schemas`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch schemas (${res.status})`);
+        }
+        return res.json();
+      })
       .then((data) => {
         const customerOptions = data.map((schema) => ({
           value: schema,
           label: schema,
         }));
-        
         setCustomer(customerOptions);
+      })
+      .catch((err) => {
+        console.error('Schema fetch error:', err);
+        showErrorModal('Failed to Load Workspaces', err);
       });
   }, []);
-
+  
   useEffect(() => {
     if (!selectedCustomer) return;
-
-    const schema =
-      typeof selectedCustomer === "string"
-        ? selectedCustomer
-        : selectedCustomer.value;
-
-    const url = `http://localhost:5000/api/schemas/${schema}`;
-
+  
+    const schema = typeof selectedCustomer === "string"
+      ? selectedCustomer
+      : selectedCustomer.value;
+  
+    const url = `${API_ENDPOINT}/schemas/${schema}`;
+  
     fetch(url)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch schema data (${res.status})`);
+        }
+        return res.json();
+      })
       .then((data) => {
         const uniqueDevices = Array.from(
           new Map(data.map((item) => [item.iv_camera_uuid, item])).values()
         );
-        
         setDeviceData(uniqueDevices);
         setTableData(uniqueDevices);
-        
+
         const custumerSiteOptions = [
           ...new Map(
             uniqueDevices
@@ -63,9 +93,15 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
           ).values(),
         ];
         setCustomerSite(custumerSiteOptions);
-        console.log(custumerSiteOptions)
+
       })
-      .catch((err) => console.error("Fetch error:", err));
+      .catch((err) => {
+        console.error('Device data fetch error:', err);
+        showErrorModal('Failed to Load Devices', err);
+        setDeviceData([]);
+        setTableData([]);
+        setCustomerSite([]);
+      });
   }, [selectedCustomer]);
 
   useEffect(() => {
@@ -94,16 +130,17 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
       ).values(),
     ];
 
-    setCameraName(cameraNameOptions);
 
   }, [selectedCustomerSite]);
 
   const handleClearFilter = () => {
+    sessionStorage.removeItem("deviceData");
+    sessionStorage.removeItem("deviceFilters");
+
     setSelectedCustomer(null);
     setSelectedCustomerSite(null);
     setSelectedCameraName(null);
     setCustomerSite([]);
-    setCameraName([]);
     setDeviceData([]);
     setTableData([]);
     setSearchText("");
@@ -120,18 +157,17 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
       const rules = device.metthier_ai_config?.rule || [];
 
       return {
-        key: `${device.device_id}-${index}`,
+        key: device.iv_camera_uuid,
         workspace: selectedCustomer,
         department: device.camera_site,
         device_name: device.camera_name,
         device_type: device.camera_type,
         slugID: "intrusioncctv",
-        amountActivate: rules.filter((item) => item.status === "ON").length,
+        amountActivate: rules.filter((item) => item.roi_status === "ON").length,
         ROI_object: rules.length,
-        ROI_status: rules.some((item) => item.status === "ON"),
+        ROI_status: rules.some((item) => item.roi_status === "ON"),
         action: rules.length > 0,
         rtsp: device.rtsp,
-        regionAIconfig: device.metthier_ai_config || null
       };
     });
 

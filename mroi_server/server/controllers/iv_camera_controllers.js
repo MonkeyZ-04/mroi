@@ -11,6 +11,17 @@ exports.get_schemas_name = async (req, res) => {
   }
 };
 
+exports.get_roi_data = async (req, res) => {
+  const {schema,key} = req.query;
+  try {
+    const result = await cameraRepo.get_roi_data(schema, key);
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 exports.get_cameras_data = async (req, res) => {
   const { SchemaSite } = req.params;
   try {
@@ -24,7 +35,7 @@ exports.get_cameras_data = async (req, res) => {
 
 exports.snapshot = (req, res) => {
   const { rtsp } = req.query;
-
+  
   if (!rtsp) return res.status(400).send("RTSP URL is required");
   ffmpegService.captureSnapshot(rtsp, res);
 };

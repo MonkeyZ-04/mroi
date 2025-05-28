@@ -120,6 +120,7 @@
     justify-content: start;
     align-items: center;
     padding-left: 10px;
+    overflow: hidden;
     gap: 5px;
     font-size: 13px;
     text-align: start;

@@ -41,7 +41,7 @@ const DrawingCanvas = ({
         {/* วาด region จาก config */}
         {regionAIConfig?.rule?.map((dataRegion, index) => {
           if (Array.isArray(dataRegion.points)) {
-            if (dataRegion.type === 'tripwire') {
+            if (dataRegion.roi_type === 'tripwire') {
               const points = dataRegion.points.flatMap(([x, y]) => [x * stageSize.scale, y * stageSize.scale]);
 
               let labelX = 0;
@@ -63,7 +63,7 @@ const DrawingCanvas = ({
                 <React.Fragment key={`tripwire-${index}`}>
                   <Line
                     points={points}
-                    stroke={selectedShape?.type === 'tripwire' && selectedShape.index === index ? 'rgb(36, 233, 255)' : 'black'}
+                    stroke={selectedShape?.roi_type === 'tripwire' && selectedShape.index === index ? 'rgb(36, 233, 255)' : 'black'}
                     strokeWidth={4}
                   />
                   <Text
@@ -73,12 +73,12 @@ const DrawingCanvas = ({
                     fontSize={17}
                     fontFamily="Tahoma" 
                     shadowOffset={{ x: 0.6, y: 0.6 }}
-                    fill={selectedShape?.type === 'tripwire' && selectedShape.index === index ? 'rgb(36, 233, 255)' : 'black'}
+                    fill={selectedShape?.roi_type === 'tripwire' && selectedShape.index === index ? 'rgb(36, 233, 255)' : 'black'}
                   />
                 </React.Fragment>
               );
             }
-            if (dataRegion.type === 'density') {
+            if (dataRegion.roi_type === 'density') {
               const points = dataRegion.points.flatMap(([x, y]) => [x * stageSize.scale, y * stageSize.scale]);
           
               let labelX = 0;
@@ -94,24 +94,24 @@ const DrawingCanvas = ({
                 <React.Fragment key={`Density-${index}`}>
                   <Line
                     points={points}
-                    stroke={selectedShape?.type === 'density' && selectedShape.index === index ? 'rgb(30, 57, 195)' : 'black'}
+                    stroke={selectedShape?.roi_type === 'density' && selectedShape.index === index ? 'rgb(30, 57, 195)' : 'black'}
                     strokeWidth={4}
                     closed
-                    fill={selectedShape?.type === 'density' && selectedShape.index === index ? 'rgba(173, 198, 255, 0.4)' : 'rgba(0, 0, 0, 0)'}
+                    fill={selectedShape?.roi_type === 'density' && selectedShape.index === index ? 'rgba(173, 198, 255, 0.4)' : 'rgba(0, 0, 0, 0)'}
                   />
                   <Text
-                    x={labelX + 5}
-                    y={labelY - 17}
+                    x={labelX }
+                    y={labelY - 25}
                     text={`${dataRegion.name}`}
                     fontSize={17}
                     fontFamily="Tahoma" 
                     shadowOffset={{ x: 0.6, y: 0.6 }}
-                    fill={selectedShape?.type === 'density' && selectedShape.index === index ? 'rgb(30, 57, 195)' : 'black'}
+                    fill={selectedShape?.roi_type === 'density' && selectedShape.index === index ? 'rgb(30, 57, 195)' : 'black'}
                   />
                 </React.Fragment>
               );
             }
-            if (dataRegion.type === 'intrusion') {
+            if (dataRegion.roi_type === 'intrusion') {
               const points = dataRegion.points.flatMap(([x, y]) => [x * stageSize.scale, y * stageSize.scale]);
           
               let labelX = 0;
@@ -127,26 +127,24 @@ const DrawingCanvas = ({
                 <React.Fragment key={`intrusion-${index}`}>
                   <Line
                     points={points}
-                    stroke={selectedShape?.type === 'intrusion' && selectedShape.index === index ? 'red' : 'black'}
+                    stroke={selectedShape?.roi_type === 'intrusion' && selectedShape.index === index ? 'red' : 'black'}
                     strokeWidth={4}
                     closed
-                    fill={selectedShape?.type === 'intrusion' && selectedShape.index === index ? 'rgba(247, 35, 35, 0.15)' : 'rgba(0, 0, 0, 0)'}
+                    fill={selectedShape?.roi_type === 'intrusion' && selectedShape.index === index ? 'rgba(247, 35, 35, 0.15)' : 'rgba(0, 0, 0, 0)'}
                   />
                   <Text
-                    x={labelX + 5}
-                    y={labelY - 17}
+                    x={labelX }
+                    y={labelY - 25}
                     text={`${dataRegion.name}`}
                     fontSize={17}
                     fontFamily="Tahoma" 
                     shadowOffset={{ x: 0.6, y: 0.6 }}
-                    fill={selectedShape?.type === 'intrusion' && selectedShape.index === index ? 'red' : 'black'}
+                    fill={selectedShape?.roi_type === 'intrusion' && selectedShape.index === index ? 'red' : 'black'}
                   />
                 </React.Fragment>
               );
             }
-            
-
-            if (dataRegion.type === 'zoom') {
+            if (dataRegion.roi_type === 'zoom') {
               if (dataRegion.points.length !== 2) return null;
 
               const [x1, y1] = dataRegion.points;
@@ -163,16 +161,16 @@ const DrawingCanvas = ({
               ].map((v) => (v * stageSize.scale));
 
               const labelX = (x1 ) * stageSize.scale;
-              const labelY = (y1-50 ) * stageSize.scale;
+              const labelY = (y1-40 ) * stageSize.scale;
 
               return (
                 <React.Fragment key={`zoom-${index}`}>
                   <Line
                     points={rectPolygon}
-                    stroke={selectedShape?.type === 'zoom' && selectedShape.index === index ? 'gold' : 'black'}
+                    stroke={selectedShape?.roi_type === 'zoom' && selectedShape.index === index ? 'gold' : 'black'}
                     strokeWidth={4}
                     closed
-                    fill={selectedShape?.type === 'zoom' && selectedShape.index === index ? 'rgba(247, 227, 47, 0.2)' : 'rgba(0, 0, 0, 0)'}
+                    fill={selectedShape?.roi_type === 'zoom' && selectedShape.index === index ? 'rgba(247, 227, 47, 0.2)' : 'rgba(0, 0, 0, 0)'}
                   />
                   <Text
                     x={labelX}
@@ -181,7 +179,7 @@ const DrawingCanvas = ({
                     fontSize={17}
                     fontFamily="Tahoma" 
                     shadowOffset={{ x: 0.6, y: 0.6 }}
-                    fill={selectedShape?.type === 'zoom' && selectedShape.index === index ? 'gold' : 'black'}
+                    fill={selectedShape?.roi_type === 'zoom' && selectedShape.index === index ? 'gold' : 'black'}
                   />
                 </React.Fragment>
               );
@@ -192,7 +190,7 @@ const DrawingCanvas = ({
         })}
 
         {/* เส้นโยงจากจุดล่าสุดกับตำแหน่งเมาส์ */}
-        {(selectedTool === 'tripwire' || selectedTool === 'intrusion') && currentPoints.length > 0 && mousePosition && (
+        {(selectedTool === 'tripwire') && currentPoints.length > 0 && mousePosition && (
           <Line
             points={[
               currentPoints[currentPoints.length - 1][0] * stageSize.scale,
@@ -200,7 +198,20 @@ const DrawingCanvas = ({
               mousePosition.x,
               mousePosition.y
             ]}
-            stroke={selectedTool === 'tripwire' ? 'blue' : 'red'}
+            stroke={'#00ffff'}
+            strokeWidth={2}
+            dash={[10, 5]}
+          />
+        )}
+        {( selectedTool === 'intrusion') && currentPoints.length > 0 && mousePosition && (
+          <Line
+            points={[
+              currentPoints[currentPoints.length - 1][0] * stageSize.scale,
+              currentPoints[currentPoints.length - 1][1] * stageSize.scale,
+              mousePosition.x,
+              mousePosition.y
+            ]}
+            stroke={'red'}
             strokeWidth={2}
             dash={[10, 5]}
           />
@@ -213,12 +224,11 @@ const DrawingCanvas = ({
               mousePosition.x,
               mousePosition.y
             ]}
-            stroke={'#1e39c3'}
+            stroke={'#1E39C3'}
             strokeWidth={2}
             dash={[10, 5]}
           />
         )}
-
         {/* วาดรูปร่างจริงที่กำลังสร้าง */}
         {selectedTool === 'intrusion' && scaledCurrentPoints.length >= 4 && (
           <Line
@@ -230,14 +240,14 @@ const DrawingCanvas = ({
         {selectedTool === 'density' && scaledCurrentPoints.length >= 4 && (
           <Line
             points={scaledCurrentPoints}
-            stroke="#1e39c3"
+            stroke="#1E39C3"
             strokeWidth={3}
           />
         )}
         {selectedTool === 'tripwire' && scaledCurrentPoints.length >= 2 && (
           <Line
             points={scaledCurrentPoints}
-            stroke="blue"
+            stroke="#00ffff"
             strokeWidth={3}
           />
         )}

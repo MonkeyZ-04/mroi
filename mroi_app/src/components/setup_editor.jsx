@@ -3,7 +3,7 @@ import { Input, Select, Tag, Button, Modal } from "antd";
 import ScheduleControls from "./schedule.jsx";
 import { v4 as uuidv4 } from 'uuid';
 import "../styles/setup_editor.css";
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import { PiCookie } from "react-icons/pi";
 import { CiPlay1, CiPause1, CiWavePulse1, CiClock1 } from "react-icons/ci";
 import { HiMiniArrowsUpDown } from "react-icons/hi2";
@@ -20,7 +20,9 @@ const SetupEditor = ({
 
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
+  const [openZoomModal, setOpenZoomModal] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
   const [scheduleData, setScheduleData] = useState({
     startTime: '00:00:00',
     endTime: '23:59:59',
@@ -29,7 +31,6 @@ const SetupEditor = ({
     direction: null,
     AIType: ""
   });
-  const [editingIndex, setEditingIndex] = useState(null);
 
   const updateSelectedSchedule = (index) => {
     const schedule = dataSelectedROI.schedule[index];
@@ -48,10 +49,10 @@ const SetupEditor = ({
     { value: "intrusion", label: "Intrusion", color: "red" },
     { value: "tripwire", label: "Tripwire", color: "cyan" },
     { value: "zoom", label: "Zoom", color: "gold" },
-    { value: "density", label: "Density", color: "geekblue"}
+    { value: "density", label: "Density", color: "geekblue" }
   ];
 
-  const defaultOption = dataSelectedROI?.type || filteredRuleTypeOptions[1];
+  const defaultOption = dataSelectedROI?.roi_type || filteredRuleTypeOptions[1];
 
   const [selectedRuleType, setSelectedRuleType] = useState({
     value: defaultOption.value,
@@ -64,10 +65,9 @@ const SetupEditor = ({
       value: option.value,
       label: <Tag color={match.color}>{match.label}</Tag>,
     });
-
     setDataSelectedROI(prev => ({
       ...prev,
-      type: option.value,
+      roi_type: option.value,
     }));
   };
 
@@ -80,7 +80,7 @@ const SetupEditor = ({
 
   useEffect(() => {
     const matched = filteredRuleTypeOptions.find(
-      (opt) => opt.value === dataSelectedROI?.type
+      (opt) => opt.value === dataSelectedROI?.roi_type
     );
     if (matched) {
       setSelectedRuleType({
@@ -88,7 +88,7 @@ const SetupEditor = ({
         label: <Tag color={matched.color}>{matched.label}</Tag>,
       });
     }
-  }, [dataSelectedROI?.type]);
+  }, [dataSelectedROI?.roi_type]);
 
   const handleCreateScheduleData = (data) => {
     setScheduleData(data);
@@ -163,8 +163,8 @@ const SetupEditor = ({
       start_time: startTime,
       end_time: endTime,
       confidence_threshold: confidenceThreshold,
-      duration_threshold_seconds:duration_threshold_seconds,
-      direction:direction,
+      duration_threshold_seconds: duration_threshold_seconds,
+      direction: direction,
       ai_type: AIType
     };
 
@@ -181,6 +181,16 @@ const SetupEditor = ({
       schedule: newList
     });
   };
+
+  const handleCheckzoom = (option) =>{
+    if ((option.value === "zoom") && zoomCount >= MAX_ZOOM_REGION){
+      setOpenZoomModal(true);
+    }else{
+      handleRuleTypeChange(option)
+      setSelectedTool(option.value);
+      handleResetPoints();
+    }
+  }
 
   return (
     <div className="container_setup">
@@ -209,15 +219,34 @@ const SetupEditor = ({
                   labelInValue
                   value={selectedRuleType}
                   onChange={(option) => {
-                    handleRuleTypeChange(option);
-                    setSelectedTool(option.value);
-                    handleResetPoints();
+                    handleCheckzoom(option);
                   }}
                   options={filteredRuleTypeOptions.map(opt => ({
                     value: opt.value,
                     label: <Tag color={opt.color}>{opt.label}</Tag>,
                   }))}
                 />
+                <Modal
+                  title={
+                    <span>
+                      <ExclamationCircleFilled style={{ color: 'red', fontSize: '24px', marginRight: 8 }} />
+                      Limit Region
+                    </span>
+                  }
+                  open={openZoomModal}
+                  footer={[
+                    <Button
+                      key="ok"
+                      className="custom-ok-button-create"
+                      onClick={() => setOpenZoomModal(false)}
+                    >
+                      OK
+                    </Button>,
+                  ]}
+                >
+                  <p>Only one Zoom region can be created.</p>
+                </Modal>
+
               </div>
               <div className="items_input_alert">
                 <div className="text_alert_change_type">

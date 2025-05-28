@@ -14,6 +14,22 @@ class CameraRepository {
     }
   } // END get schema name 
 
+  async get_roi_data(schema, key) {
+    try {
+      await sequelize.query(`SET search_path TO ${schema}`);
+
+      const result = await iv_cameras.findOne({
+        attributes: ["metthier_ai_config"],
+        where: { iv_camera_uuid: key },
+      });
+      
+      return result.metthier_ai_config;
+    } catch (error) {
+      console.error("Error in get_roi_data :", error);
+      throw error;
+    }
+  }
+
   async get_cameras_data(schemaName) {
     try {
       await sequelize.query(`SET search_path TO :schema`, {

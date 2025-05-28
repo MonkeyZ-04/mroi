@@ -22,7 +22,7 @@ const Sidebar = ({
   maxTotalRegion,
   handleChangeStatus
 }) => {
-  const rule = regionAIConfig.rule;
+  const rule = regionAIConfig?.rule || [];
 
   useEffect(() => {
     if (selectedShape) setSelectedItem(selectedShape.index);
@@ -33,14 +33,14 @@ const Sidebar = ({
   const [openModalDelete, setOpenModalDelete] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
 
-  const showDeleteModal = (type, index) => {
-    setItemToDelete({ type, index });
+  const showDeleteModal = (roi_type, index) => {
+    setItemToDelete({ roi_type, index });
     setOpenModalDelete(true);
   };
 
   const handleConfirmDelete = () => {
     if (itemToDelete) {
-      handleDeleteShape(itemToDelete.type, itemToDelete.index);
+      handleDeleteShape(itemToDelete.roi_type, itemToDelete.index);
     }
     setOpenModalDelete(false);
     setItemToDelete(null);
@@ -53,11 +53,11 @@ const Sidebar = ({
     ) {
       const initialStatus = {};
       regionAIConfig.rule.forEach((region, index) => {
-        initialStatus[`${region.type}-${index}`] = region.status;
+        initialStatus[`${region.roi_type}-${index}`] = region.roi_status;
       });
       setConfigStatusButton(initialStatus);
     }
-  }, [regionAIConfig.rule.length]);
+  }, [regionAIConfig?.rule.length]);
 
   return (
     <div className="side_bar">
@@ -66,7 +66,7 @@ const Sidebar = ({
           <p>Rule List</p>
         </div>
         <div className="roi_list_items">
-          {rule.length === 0 ? (
+          {rule?.length === 0 ? (
             <div className="still_not_drawed">
               <div>
                 <SisternodeOutlined className="no_region_icon" />
@@ -75,7 +75,7 @@ const Sidebar = ({
                 <p>The ROI has not yet been created... </p>
               </div>
               <div className="box_button_create_rule">
-                {rule.length < maxTotalRegion && (
+                {rule?.length < maxTotalRegion && (
                   <Button
                     onClick={() => {
                       addShapeToRegionAIConfig();
@@ -90,7 +90,7 @@ const Sidebar = ({
             </div>
           ) : (
             <>
-              {rule.map((region, index) => (
+              {rule?.map((region, index) => (
                 <div
                   key={uuidv4()}
                   className={
@@ -98,57 +98,57 @@ const Sidebar = ({
                       ? 'items_in_sidebar_focus'
                       : 'items_in_sidebar'
                   }
-                  onClick={() => setSelectedShape({ type: region.type, index })}
+                  onClick={() => setSelectedShape({ roi_type: region.roi_type, index })}
                 >
                   <span className="item_name">
-                    {region.type === 'intrusion' && (
+                    {region.roi_type === 'intrusion' && (
                       <>
                         <ImportOutlined />
                         {region.name}
                       </>
                     )}
-                    {region.type === 'tripwire' && (
+                    {region.roi_type === 'tripwire' && (
                       <>
                         <VerticalAlignMiddleOutlined />
                         {region.name}
                       </>
                     )}
-                    {region.type === 'zoom' && (
+                    {region.roi_type === 'zoom' && (
                       <>
                         <ExpandOutlined /> {region.name}
                       </>
                     )}
-                    {region.type === 'density' && (
+                    {region.roi_type === 'density' && (
                       <>
                         <TeamOutlined /> {region.name}
                       </>
                     )}
                   </span>
                   <span className="item_type">
-                    {region.type === 'intrusion' && (
+                    {region.roi_type === 'intrusion' && (
                       <Tag className='button_show_type' color="red"><ImportOutlined /> Intrusion</Tag>
                     )}
-                    {region.type === 'tripwire' && (
+                    {region.roi_type === 'tripwire' && (
                       <Tag className='button_show_type' color="cyan"><VerticalAlignMiddleOutlined /> Tripwire</Tag>
                     )}
-                    {region.type === 'zoom' && (
+                    {region.roi_type === 'zoom' && (
                       <Tag className='button_show_type' color="gold"><ExpandOutlined />Zoom</Tag>
                     )}
-                    {region.type === 'density' && (
+                    {region.roi_type === 'density' && (
                       <Tag className='button_show_type' color="geekblue"><TeamOutlined /> Density</Tag>
                     )}
                   </span>
                   <div className="tools_setup_item">
                     <span className="status_switch">
                       <Switch
-                        checked={region.status === 'ON'}
+                        checked={region.roi_status === 'ON'}
                         onChange={(checked) => {
-                          const formValues = { status: checked };
+                          const formValues = { roi_status: checked };
                           handleChangeStatus(index, regionAIConfig, formValues);
                         }}
                         style={{
                           backgroundColor:
-                            region.status === 'ON' ? '#4fce66' : '#adb4c1'
+                            region.roi_status === 'ON' ? '#4fce66' : '#adb4c1'
                         }}
                       />
                     </span>
@@ -156,7 +156,7 @@ const Sidebar = ({
                       className="bin"
                       onClick={(e) => {
                         e.stopPropagation();
-                        showDeleteModal(region.type, index);
+                        showDeleteModal(region.roi_type, index);
                       }}
                     >
                       <DeleteOutlined className="delete_icon" />

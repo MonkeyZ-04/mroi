@@ -61,7 +61,9 @@
   justify-content: flex-start;
   align-items: flex-start;
   gap: 10px;
+  min-width: 63%;
   width: auto;
+
   padding: 10px 0px 10px 0px;
 }
 
@@ -187,7 +189,7 @@
 
 .loading_waiting_imageObj{
   width: 100%;
-  height: 80vh;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -213,64 +215,136 @@
 .custom-cancel-button{
   width: 25%;
 }
+.draw_image{
+  width:100% ;
+  height: 100%;
+}
 
 /* ================== Responsive ================== */
+
+@media (max-width: 1400px) {
+  .tools_box_main {
+    width: 100%;
+  }
+}
 
 @media (max-width: 1200px) {
   .canvas_box {
     width: 100%;
+    min-width: 100%;
   }
 
   .tools_side {
     width: 100%;
-  }
-
-  .canvas_box{
-    padding: 0px;
+    margin-top: 20px;
   }
 
   .tools_box_main {
     flex-direction: column;
-    width: 100%;
   }
 
   .edit_box {
     width: 100%;
+    margin-bottom: 80px; /* Account for fixed footer */
+  }
+
+  .box_bottom_save {
+    margin-right: 10px;
   }
 }
-@media (min-width: 800px) and (max-width: 900px) {
-  .canvas_box {
-    transform: scale(1.1); /* หรือกำหนด width/height ใหม่ */
+
+@media (max-width: 900px) {
+  .container_tools {
+    padding: 0 30px 100px 30px;
   }
 
   .cameraName_title {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .box_text_guild_drawEnd,
+  .box_text_guild_drawwing {
+    font-size: 14px;
+  }
+
+  .button_control {
+    height: auto;
+    min-height: 40px;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  .box_button_control_drawwing {
+    width: 100%;
+    justify-content: center;
   }
 }
 
-
 @media (max-width: 768px) {
   .container_tools {
-    padding: 0 20px;
+    padding: 0 15px 100px 15px;
   }
 
   .cameraName_title {
     font-size: 20px;
   }
 
+  .header_tools_nav {
+    gap: 10px;
+  }
+
   .box_text_info {
     flex-direction: column;
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .info_box_left,
   .info_box_right {
     width: 100%;
+    gap: 10px;
   }
 
   .edit_box {
-    height: auto;
     min-height: 200px;
+  }
+
+  .footer_bar {
+    height: 56px;
+  }
+
+  .box_bottom_save {
+    gap: 5px;
+  }
+
+  .custom-ok-button-save,
+  .custom-ok-button-discard,
+  .custom-cancel-button {
+    width: auto;
+    min-width: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container_tools {
+    padding: 0 10px 80px 10px;
+  }
+
+  .header_tools_nav .ant-breadcrumb {
+    font-size: 13px;
+  }
+
+  .cameraName_title {
+    font-size: 18px;
+  }
+
+  .box_text_guild_drawEnd,
+  .box_text_guild_drawwing {
+    font-size: 13px;
+  }
+
+  .box_bottom_save {
+    margin-right: 5px;
   }
 }
 

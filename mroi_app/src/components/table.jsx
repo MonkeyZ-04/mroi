@@ -86,7 +86,9 @@ function TableComponent({ data }) {
               fontWeight: 500,
             }}
             onClick={() => {
-              navigate('/tools', { state: { deviceData: record } });
+              const url = '/tools';
+              const urlWithParams = `${url}?data=${encodeURIComponent(JSON.stringify(record))}`;
+              window.open(urlWithParams, '_blank');
             }}
           >
             {value ? ' Edit' : '+ Create ROI'}

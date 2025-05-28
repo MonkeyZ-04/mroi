@@ -1,16 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
+
 import { v4 as uuidv4 } from 'uuid';
 import { Button, Modal, Breadcrumb } from 'antd';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { LeftOutlined, SaveOutlined, SignatureOutlined, InfoCircleOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import { 
+  LeftOutlined, 
+  SaveOutlined, 
+  SignatureOutlined, 
+  InfoCircleOutlined, 
+  ExclamationCircleFilled 
+} from '@ant-design/icons';
+
 import 'antd/dist/reset.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '../styles/tools.css';
 
 import DrawingCanvas from './drawing_canvas.jsx';
 import Sidebar from './sidebar.jsx';
 import SetupEditor from './setup_editor.jsx';
-import '../styles/tools.css';
-import { useLocation } from 'react-router-dom';
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
 const CREATOR = import.meta.env.VITE_CREATOR;
@@ -133,8 +141,9 @@ function Tools() {
     });
   };
 
-  // Fetch Data and Image of camera
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const deviceData = JSON.parse(decodeURIComponent(params.get('data')));
     if (!deviceData?.rtsp) return;
 
     setSelectedCustomer(deviceData.workspace);
@@ -252,8 +261,8 @@ function Tools() {
 
     fetchSnapshot();
     fetchROIData();
-  }, [deviceData]);
-
+  }, []);
+  
   const handleMouseMove = (e) => {
     const stage = e.target.getStage();
     const pointer = stage.getPointerPosition();
@@ -399,8 +408,23 @@ function Tools() {
       if (imageObj.width < 800 || imageObj.height < 800) {
         Modal.warning({
           title: 'Warning',
-          content: `This snapshot looks like it is from a sub stream camera! Scale : ${imageObj.width} x ${imageObj.height}`
-        })
+          content: (
+            <div>
+              <p>
+                This snapshot looks like it is from a sub stream camera! Scale : {imageObj.width} x {imageObj.height}
+              </p>
+              <p>
+                You shouldn't draw with <span style={{ 
+                  color: 'gold', 
+                  fontWeight: 'bold',
+                  backgroundColor: '#fff1f0',
+                  padding: '2px 6px',
+                  borderRadius: '4px'
+                }}>Zoom</span> type
+              </p>
+            </div>
+          )
+        });
       } else {
         const modal = Modal.success({
           title: 'Success!!',
@@ -523,9 +547,6 @@ function Tools() {
   useEffect(() => {
     const zoomCount = regionAIConfig?.rule?.filter(item => item.roi_type === 'zoom').length || 0;
     setZoomCount(zoomCount);
-
-    console.log("Main data : ", regionAIConfig)
-
   }, [regionAIConfig.rule])
 
   return (

@@ -1,31 +1,33 @@
 # MROI Application
 
-A React-based application for managing multiple regions of interest (ROI) in video surveillance systems.
+A React-Vite application for managing multiple regions of interest (ROI) in video surveillance systems.
 
 ## Features
 
-- Draw and manage multiple ROI types:
-  - Intrusion detection zones
-  - Tripwire lines
-  - Density monitoring areas
-  - Zoom regions
-- Real-time camera snapshot viewing
-- Flexible scheduling system
+- Draw and manage multiple ROI types (limit 6):
+  - Intrusion detection zones 
+  - Tripwire lines 
+  - Density monitoring areas 
+  - Zoom regions (max 1 per camera)
+- Real-time camera snapshot viewing with FFmpeg
+- Flexible scheduling system with timezone support
 - Support for RTSP camera streams
-- Responsive design for different screen sizes
+- Responsive design (desktop to mobile)
+- Interactive drawing with Konva.js
 
 ## Prerequisites
 
 - Node.js 16.x or higher
 - npm 8.x or higher
-- A modern web browser
+- Modern web browser with WebGL support
 - Access to RTSP camera streams
+- Backend server running on port 3001
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/mroi.git
+git clone https://github.com/PrasitPaisan/mroi.git
 cd mroi/mroi_app
 ```
 
@@ -36,7 +38,7 @@ npm install
 
 3. Create a `.env` file in the root directory:
 ```env
-VITE_API_ENDPOINT=http://localhost:3001
+VITE_API_ENDPOINT=http://localhost:5000
 VITE_CREATOR=your_name
 ```
 
@@ -49,19 +51,16 @@ npm run dev
 
 The application will be available at `http://localhost:5173`
 
-## Building for Production
-
-Create a production build:
-```bash
-npm run build
-```
-
 ## Project Structure
 
 ```
 mroi_app/
 ├── src/
 │   ├── components/    # React components
+│   │   ├── DrawingCanvas.jsx    # ROI drawing interface
+│   │   ├── SetupEditor.jsx      # ROI configuration
+│   │   ├── Sidebar.jsx          # Rule management
+│   │   └── Tools.jsx            # Main workspace
 │   ├── styles/       # CSS files
 │   ├── utils/        # Utility functions
 │   └── App.jsx       # Main application component
@@ -71,12 +70,18 @@ mroi_app/
 
 ## Key Components
 
-- **DrawingCanvas**: Handles ROI drawing and visualization
-- **SetupEditor**: Manages ROI configuration and scheduling
-- **Sidebar**: Lists and manages ROI rules
-- **Tools**: Main workspace for ROI management
+- **DrawingCanvas**: Handles ROI drawing and visualization using Konva.js
+- **SetupEditor**: Manages ROI configuration, scheduling, and parameter settings
+- **Sidebar**: Lists and manages ROI rules with real-time status updates
+- **Tools**: Main workspace for ROI management and camera integration
 
 ## Environment Variables
 
-- `VITE_API_ENDPOINT`: Backend API endpoint
+- `VITE_API_ENDPOINT`: Backend API endpoint (default: http://localhost:5000)
 - `VITE_CREATOR`: Default creator name for new rules
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Create production build
+- `npm run preview` - Preview production build locally

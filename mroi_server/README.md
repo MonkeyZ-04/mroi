@@ -8,8 +8,13 @@ Backend service for the MROI (Multiple Region of Interest) application that hand
 - Real-time snapshot generation
 - ROI data management
 - Multi-workspace support
-- Authentication and authorization
 - Database integration
+- Error handling and logging
+- Support for multiple ROI types:
+  - Intrusion detection
+  - Tripwire monitoring
+  - Density analysis
+  - Zoom regions
 
 ## Prerequisites
 
@@ -28,7 +33,7 @@ brew install ffmpeg
 
 2. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/mroi.git
+git clone https://github.com/PrasitPaisan/mroi.git
 cd mroi/mroi_server
 ```
 
@@ -44,7 +49,7 @@ npm rebuild bcrypt
 
 5. Create `.env` file:
 ```env
-PORT=3001
+PORT=5000
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=your_username
@@ -78,21 +83,17 @@ mroi_server/
 ## API Endpoints
 
 ### Camera Management
-- `GET /snapshot` - Capture RTSP stream snapshot
-- `POST /stream/start` - Start stream processing
-- `POST /stream/stop` - Stop stream processing
+- `GET /snapshot/:rtsp` - Capture RTSP stream snapshot with specific camera URL
+- `POST /snapshot/save` - Save snapshot configuration
 
 ### ROI Management
 - `GET /schemas` - Get available workspaces
 - `GET /schemas/:name` - Get workspace data
 - `POST /roi/save` - Save ROI configuration
-- `GET /roi/data` - Get ROI data
-
-## Environment Variables
-
+- `GET /roi/:camera_id` - Get ROI data for specific camera
 | Variable    | Description           | Default     |
 |-------------|--------------------|-------------|
-| PORT        | Server port number | 3001        |
+| PORT        | Server port number | 5000        |
 | DB_HOST     | Database host      | localhost   |
 | DB_PORT     | Database port      | 5432        |
 | DB_USER     | Database username  | -           |

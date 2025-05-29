@@ -14,7 +14,7 @@ Backend service for the MROI (Multiple Region of Interest) application that hand
 ## Prerequisites
 
 - Node.js 16.x or higher
-- Yarn package manager
+- npm 8.x or higher
 - FFmpeg installed on the system
 - PostgreSQL database
 - Python 3.x (for AI processing)
@@ -34,7 +34,7 @@ cd mroi/mroi_server
 
 3. Install dependencies:
 ```bash
-yarn install
+npm install
 ```
 
 4. Rebuild bcrypt (if needed):
@@ -57,7 +57,7 @@ JWT_SECRET=your_secret_key
 
 Start the development server with hot reload:
 ```bash
-yarn watch:dev
+npm run dev
 ```
 
 ## Project Structure
@@ -102,10 +102,10 @@ mroi_server/
 
 ## Scripts
 
-- `yarn watch:dev` - Start development server
-- `yarn start` - Start production server
-- `yarn test` - Run tests
-- `yarn lint` - Run linter
+- `npm run dev` - Start development server with hot reload
+- `npm start` - Start production server
+- `npm test` - Run tests
+- `npm run lint` - Run linter
 
 ## Error Handling
 
@@ -119,15 +119,3 @@ The server implements standardized error responses:
   "details": "Additional error details"
 }
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.

@@ -55,7 +55,6 @@ DB_PORT=5432
 DB_USER=your_username
 DB_PASSWORD=your_password
 DB_NAME=mroi_db
-JWT_SECRET=your_secret_key
 ```
 
 ## Development
@@ -83,14 +82,14 @@ mroi_server/
 ## API Endpoints
 
 ### Camera Management
-- `GET /snapshot/:rtsp` - Capture RTSP stream snapshot with specific camera URL
-- `POST /snapshot/save` - Save snapshot configuration
+- `GET /snapshot` - Capture RTSP stream snapshot
+- `GET /schemas/:SchemaSite` - Get cameras data for specific site
 
 ### ROI Management
-- `GET /schemas` - Get available workspaces
-- `GET /schemas/:name` - Get workspace data
-- `POST /roi/save` - Save ROI configuration
-- `GET /roi/:camera_id` - Get ROI data for specific camera
+- `GET /schemas` - Get available workspaces/schemas
+- `GET /fetch/roi/data` - Get ROI configuration data
+- `POST /save-region-config` - Save and update ROI configuration
+
 | Variable    | Description           | Default     |
 |-------------|--------------------|-------------|
 | PORT        | Server port number | 5000        |
@@ -99,7 +98,7 @@ mroi_server/
 | DB_USER     | Database username  | -           |
 | DB_PASSWORD | Database password  | -           |
 | DB_NAME     | Database name      | mroi_db     |
-| JWT_SECRET  | JWT secret key     | -           |
+
 
 ## Scripts
 
@@ -108,15 +107,3 @@ mroi_server/
 - `npm test` - Run tests
 - `npm run lint` - Run linter
 
-## Error Handling
-
-The server implements standardized error responses:
-
-```json
-{
-  "error": true,
-  "message": "Error description",
-  "code": "ERROR_CODE",
-  "details": "Additional error details"
-}
-```

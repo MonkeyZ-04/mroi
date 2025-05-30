@@ -1,25 +1,20 @@
 # MROI (Multiple Region of Interest)
 
-A comprehensive system for managing multiple regions of interest in RTSP (Real-Time Streaming Protocol), consisting of a React-Vite frontend and Node.js backend.
-
-## Project Overview
-
-This repository contains two main components:
-- **mroi_app**: Frontend React-Vite application
-- **mroi_server**: Backend Node.js server
+A comprehensive system for managing multiple regions of interest in RTSP camera streams using React and Node.js.
 
 ## Features
 
 ### Frontend (mroi_app)
-- Interactive ROI drawing interface with Konva.js
-- Multiple ROI types support:
+- Draw and manage multiple ROI types:
   - Intrusion detection zones
-  - Tripwire monitoring lines
-  - Density detection areas
+  - Tripwire lines
+  - Density monitoring areas
   - Zoom regions (max 1 per camera)
 - Real-time camera snapshot viewing
 - Flexible scheduling system
-- Responsive design for all screen sizes
+- Support for RTSP camera streams
+- Responsive design (desktop to mobile)
+- Interactive drawing with Konva.js
 
 ### Backend (mroi_server)
 - RTSP stream handling with FFmpeg
@@ -27,43 +22,36 @@ This repository contains two main components:
 - Multi-workspace support
 - PostgreSQL database integration
 - RESTful API endpoints
-- Error handling and logging
 
 ## Prerequisites
 
 ### Frontend Requirements
 - Node.js 16.x or higher
 - npm 8.x or higher
-- Modern web browser with Antd design
+- Modern web browser with WebGL support
 
 ### Backend Requirements
 - Node.js 16.x or higher
 - npm 8.x or higher
 - FFmpeg 4.x or higher
 - PostgreSQL 14.x or higher
-- Python 3.8+ (for AI processing)
 
 ## Quick Start
 
-1. Install FFmpeg (on macOS):
+1. Clone the repository:
 ```bash
-brew install ffmpeg
-```
-
-2. Clone the repository:
-```bash
-git clone https://github.com/PrasitPaisan/mroi.git
+git clone https://github.com/metthier/mroi.git
 cd mroi
 ```
 
-3. Install and start the backend:
+2. Install and start the backend:
 ```bash
 cd mroi_server
 npm install
 npm run dev
 ```
 
-4. Install and start the frontend:
+3. Install and start the frontend:
 ```bash
 cd ../mroi_app
 npm install
@@ -71,25 +59,8 @@ npm run dev
 ```
 
 The application will be available at:
-- Frontend: http://localhost:3000
-- Backend: http://localhost:5000
-
-## Project Structure
-
-```
-mroi/
-├── mroi_app/           # Frontend application
-│   ├── src/           # React source code
-│   │   ├── components/# React components
-│   │   ├── styles/    # CSS styles
-│   │   └── utils/     # Utility functions
-│   └── package.json   # Dependencies
-├── mroi_server/       # Backend server
-│   ├── server/        # Server source code
-│   ├── config/        # Configuration
-│   └── package.json   # Dependencies
-└── docs/             # Documentation
-```
+- Frontend: http://localhost:5173
+- Backend: http://localhost:5000/api
 
 ## Environment Setup
 
@@ -101,28 +72,48 @@ DB_PORT=5432
 DB_USER=your_username
 DB_PASSWORD=your_password
 DB_NAME=mroi_db
-JWT_SECRET=your_secret_key
 ```
 
 2. Frontend (.env):
 ```env
-VITE_API_ENDPOINT=http://localhost:3001
-VITE_CREATOR=your_name
+VITE_API_ENDPOINT=http://localhost:5000/api
+VITE_CREATOR='METTHIER AI TEAMS'
+VITE_MAX_TOTAL_REGION=6
+VITE_MAX_ZOOM_REGION=1
 ```
 
-## Development
+## Project Structure
 
-1. Start the backend server:
-```bash
-cd mroi_server
-npm run dev
+```
+mroi/
+├── mroi_app/           # Frontend application
+│   ├── src/
+│   │   ├── components/ # React components
+│   │   │   ├── drawing_canvas.jsx
+│   │   │   ├── setup_editor.jsx
+│   │   │   ├── sidebar.jsx
+│   │   │   └── tools.jsx
+│   │   ├── styles/    # CSS styles
+│   │   └── utils/     # Utility functions
+│   └── package.json
+├── mroi_server/       # Backend server
+│   ├── server/
+│   │   ├── controllers/
+│   │   ├── services/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   └── utils/
+│   └── package.json
+└── README.md
 ```
 
-2. Start the frontend development server:
-```bash
-cd mroi_app
-npm run dev
-```
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## Authors
 

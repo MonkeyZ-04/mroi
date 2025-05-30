@@ -4,11 +4,12 @@ A React-Vite application for managing multiple regions of interest (ROI) in vide
 
 ## Features
 
-- Draw and manage multiple ROI types (limit 6):
-  - Intrusion detection zones 
-  - Tripwire lines 
-  - Density monitoring areas 
+- Draw and manage multiple ROI types:
+  - Intrusion detection zones (unlimited)
+  - Tripwire lines (unlimited)
+  - Density monitoring areas (unlimited)
   - Zoom regions (max 1 per camera)
+  - Total regions limited to 6 per camera
 - Real-time camera snapshot viewing with FFmpeg
 - Flexible scheduling system with timezone support
 - Support for RTSP camera streams
@@ -38,8 +39,10 @@ npm install
 
 3. Create a `.env` file in the root directory:
 ```env
-VITE_API_ENDPOINT=http://localhost:5000
-VITE_CREATOR=your_name
+VITE_API_ENDPOINT=http://localhost:5000/api
+VITE_CREATOR='METTHIER AI TEAMS'
+VITE_MAX_TOTAL_REGION=6
+VITE_MAX_ZOOM_REGION=1
 ```
 
 ## Development
@@ -49,7 +52,7 @@ Start the development server:
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
+The application will be available at `http://localhost:3000`
 
 ## Project Structure
 
@@ -77,11 +80,19 @@ mroi_app/
 
 ## Environment Variables
 
-- `VITE_API_ENDPOINT`: Backend API endpoint (default: http://localhost:5000)
-- `VITE_CREATOR`: Default creator name for new rules
+- `VITE_API_ENDPOINT`: Backend API endpoint (default: http://localhost:5000/api)
+- `VITE_CREATOR`: Default creator name (default: 'METTHIER AI TEAMS')
+- `VITE_MAX_TOTAL_REGION`: Maximum total ROI regions allowed (default: 6)
+- `VITE_MAX_ZOOM_REGION`: Maximum zoom regions per camera (default: 1)
 
 ## Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Create production build
 - `npm run preview` - Preview production build locally
+
+## Usage Limits
+
+- Maximum total ROI regions per camera: 6
+- Maximum zoom regions per camera: 1
+- No individual limits on other region types within total limit

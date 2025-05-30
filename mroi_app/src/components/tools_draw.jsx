@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
-
 import { v4 as uuidv4 } from 'uuid';
 import { Button, Modal, Breadcrumb } from 'antd';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -22,13 +20,10 @@ import SetupEditor from './setup_editor.jsx';
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
 const CREATOR = import.meta.env.VITE_CREATOR;
+const MAX_TOTAL_REGION = parseInt(import.meta.env.VITE_MAX_TOTAL_REGION) ;
+const MAX_ZOOM_REGION = parseInt(import.meta.env.VITE_MAX_ZOOM_REGION);
 
 function Tools() {
-  const location = useLocation();
-  const deviceData = location.state?.deviceData;
-
-  const MAX_TOTAL_REGION = 6;
-  const MAX_ZOOM_REGION = 1;
 
   // data config region database
   const [regionAIConfig, setRegionAIConfig] = useState({ rule: [] })
@@ -68,8 +63,8 @@ function Tools() {
   }
   //================END================
 
+  // for check format data in metthier_ai_config
   const checked_metthier_ai_config = (metthier_ai_config) => {
-    // Check if data is null or undefined
     if (!metthier_ai_config) {
       error_fetct(
         'Data Error',
@@ -85,7 +80,6 @@ function Tools() {
       return { rule: [] };
     }
 
-    // Check if data has the correct structure
     if (!Array.isArray(metthier_ai_config.rule)) {
       error_fetct(
         'Invalid Data Format',
@@ -101,7 +95,7 @@ function Tools() {
       return { rule: [] };
     }
 
-    // Validate each rule in the array
+  
     const isValidRule = (rule) => {
       return rule &&
         typeof rule === 'object' &&
@@ -120,7 +114,7 @@ function Tools() {
             One or more rules have invalid format
           </p>
           <small style={{ color: '#666' }}>
-            Rules must contain: points, roi_type, schedule, roi_id, and roi_status but it not , Will reset to new format.
+            Rules must contain: points, roi_type, schedule, roi_id, and roi_status but it not
           </small>
         </div>
       );

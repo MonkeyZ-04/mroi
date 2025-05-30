@@ -59,7 +59,7 @@ npm run dev
 ```
 
 The application will be available at:
-- Frontend: http://localhost:5173
+- Frontend: http://localhost:3000
 - Backend: http://localhost:5000/api
 
 ## Environment Setup

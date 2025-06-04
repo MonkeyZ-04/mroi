@@ -1,7 +1,7 @@
 FROM node:22-alpine
 
-# # Install system dependencies
-# RUN apk add --no-cache ffmpeg
+#  Install system dependencies
+RUN apk add --no-cache ffmpeg
 
 # Create app directory
 WORKDIR /app

@@ -4,6 +4,7 @@ import SelectDropdown from "./Select_dropdown";
 import { Button, Input, Modal } from "antd";
 const { Search } = Input;
 import "../styles/devices.css";
+import { filter } from "lodash";
 
 function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
   const [Customer, setCustomer] = useState([]);
@@ -134,16 +135,14 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
   }, [selectedCustomerSite]);
 
   const handleClearFilter = () => {
-    sessionStorage.removeItem("deviceData");
-    sessionStorage.removeItem("deviceFilters");
-
     setSelectedCustomer(null);
     setSelectedCustomerSite(null);
-    setSelectedCameraName(null);
-    setCustomerSite([]);
+    setSearchText("");
+  
     setDeviceData([]);
     setTableData([]);
-    setSearchText("");
+    setCustomerSite([]);
+  
     onCustomerSelect?.(null);
     onSiteSelect?.(null);
     onCameraSelect?.(null);
@@ -207,7 +206,7 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
         </div>
       </div>
       <div className="tabel">
-        <TableComponent data={filteredData} />
+        <TableComponent data={filteredData.length >0 ? filteredData : []} />
       </div>
     </div>
   );

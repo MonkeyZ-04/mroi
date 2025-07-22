@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Button, Modal, Breadcrumb } from 'antd';
+import { Button, Modal, Breadcrumb, notification } from 'antd';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { 
   LeftOutlined, 
@@ -23,233 +23,146 @@ const CREATOR = import.meta.env.VITE_CREATOR;
 const MAX_TOTAL_REGION = parseInt(import.meta.env.VITE_MAX_TOTAL_REGION) ;
 const MAX_ZOOM_REGION = parseInt(import.meta.env.VITE_MAX_ZOOM_REGION);
 
-function Tools() {
+// Function to migrate old rule format to the new one
+const migrateRuleFormat = (rule, index) => {
+  if (rule.roi_type) return rule;
 
-  // data config region database
-  const [regionAIConfig, setRegionAIConfig] = useState({ rule: [] })
+  const newRule = {
+    points: rule.points,
+    roi_type: rule.type,
+    name: `Rule ${index + 1}`,
+    roi_id: uuidv4(),
+    created_date: new Date().toLocaleDateString("en-GB"),
+    created_by: CREATOR,
+    roi_status: rule.status || 'OFF',
+    schedule: [],
+  };
+
+  if (rule.schedule && typeof rule.schedule === 'object' && !Array.isArray(rule.schedule)) {
+    newRule.schedule.push({
+      surveillance_id: uuidv4(),
+      ai_type: "intrusion",
+      start_time: rule.schedule.start_time || "00:00:00",
+      end_time: rule.schedule.end_time || "23:59:59",
+      direction: "Both",
+      confidence_threshold: rule.confidence_threshold || 0.5,
+      duration_threshold_seconds: 0,
+    });
+  }
+
+  if (newRule.roi_type === 'zoom' && Array.isArray(rule.points) && !Array.isArray(rule.points[0])) {
+      newRule.points = [rule.points];
+  }
+
+  return newRule;
+};
+
+
+function Tools() {
+  const [regionAIConfig, setRegionAIConfig] = useState({ rule: [] });
   const [backupData, setBackupData] = useState(null);
-  const [image, setImage] = useState(null);
   const [imageObj, setImageObj] = useState(null);
-  // imageobj
+  const [snapshotError, setSnapshotError] = useState(false);
   const [stageSize, setStageSize] = useState({ width: 800, height: 600, scale: 1 });
-  // drawing
   const [enableDraw, setEnableDraw] = useState(false);
   const [selectedTool, setSelectedTool] = useState('tripwire');
   const [currentPoints, setCurrentPoints] = useState([]);
   const [selectedShape, setSelectedShape] = useState({ roi_type: null, index: null });
   const [dataSelectedROI, setDataSelectedROI] = useState(null);
   const [zoomCount, setZoomCount] = useState(0);
-  // for get data point
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [selectedCustomerSite, setSelectedCustomerSite] = useState(null)
+  const [selectedCameraId, setSelectedCameraId] = useState(null);
   const [selectedCameraName, setSelectedCameraName] = useState(null);
-  // for show line when drow
   const [mousePosition, setMousePosition] = useState(null);
+  const [openSaveModal, setOpenSaveModal] = useState(false);
+  const [openDiscardModal, setOpenDiscardModal] = useState(false);
 
-  // Modal 
-  const [openSaveModal, setOpenSaveModal] = useState(false)
-  const [openDiscardModal, setOpenDiscardModal] = useState(false)
-
-  const showModalSave = () => {
-    setOpenSaveModal(true)
-  }
-  const showModalDiscard = () => {
-    setOpenDiscardModal(true)
-  }
-
+  const showModalSave = () => setOpenSaveModal(true);
+  const showModalDiscard = () => setOpenDiscardModal(true);
   const closeModal = () => {
-    setOpenDiscardModal(false)
-    setOpenSaveModal(false)
+    setOpenDiscardModal(false);
+    setOpenSaveModal(false);
   }
-  //================END================
-
-  // for check format data in metthier_ai_config
-  const checked_metthier_ai_config = (metthier_ai_config) => {
-    if (!metthier_ai_config) {
-      error_fetct(
-        'Data Error',
-        <div>
-          <p style={{ marginBottom: '8px', color: '#ff4d4f' }}>
-            No configuration data received
-          </p>
-          <small style={{ color: '#666' }}>
-            Initializing with empty configuration
-          </small>
-        </div>
-      );
-      return { rule: [] };
-    }
-
-    if (!Array.isArray(metthier_ai_config.rule)) {
-      error_fetct(
-        'Invalid Data Format',
-        <div>
-          <p style={{ marginBottom: '8px', color: '#ff4d4f' }}>
-            Invalid configuration format received from database
-          </p>
-          <small style={{ color: '#666' }}>
-            Expected 'rule' array in configuration
-          </small>
-        </div>
-      );
-      return { rule: [] };
-    }
-
   
-    const isValidRule = (rule) => {
-      return rule &&
-        typeof rule === 'object' &&
-        Array.isArray(rule.points) &&
-        typeof rule.roi_type === 'string' &&
-        Array.isArray(rule.schedule) &&
-        typeof rule.roi_id === 'string' &&
-        typeof rule.roi_status === 'string';
-    };
-
-    if (!metthier_ai_config.rule.every(isValidRule)) {
-      error_fetct(
-        'Invalid Rule Format',
+  const showNotification = (type, title, message, details = '') => {
+    notification[type]({
+      message: title,
+      description: (
         <div>
-          <p style={{ marginBottom: '8px', color: '#ff4d4f' }}>
-            One or more rules have invalid format
-          </p>
-          <small style={{ color: '#666' }}>
-            Rules must contain: points, roi_type, schedule, roi_id, and roi_status but it not
-          </small>
+          <p>{message}</p>
+          {details && <small style={{ color: '#999' }}>{details}</small>}
         </div>
-      );
-      return { rule: [] };
-    }
-
-    // If all validations pass, return the original data
-    return metthier_ai_config;
-  };
-
-  const error_fetct = (Title, Content) => {
-    Modal.error({
-      title: Title,
-      content: Content,
-      okButtonProps: {
-        className: 'custom-ok-button-error'
-      }
+      ),
+      placement: 'topRight',
     });
   };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const deviceData = JSON.parse(decodeURIComponent(params.get('data')));
-    if (!deviceData?.rtsp) return;
+    if (!deviceData) return;
 
     setSelectedCustomer(deviceData.workspace);
-    setSelectedCustomerSite(deviceData.department);
+    setSelectedCameraId(deviceData.key);
     setSelectedCameraName(deviceData.device_name);
 
     const fetchROIData = async () => {
+      if (!deviceData.workspace || !deviceData.key) return;
       try {
-        const res = await fetch(
-          `${API_ENDPOINT}/fetch/roi/data?schema=${deviceData.workspace}&key=${deviceData.key}`
-        );
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          console.log('error data ==>',errorData)
-          error_fetct(
-            'Error Fetching Rules',
-            <div>
-              <p style={{ marginBottom: '8px', color: '#ff4d4f' }}>
-                Failed to fetch rule data
-              </p>
-              <small style={{ color: '#666', display: 'block', marginTop: '8px' }}>
-                Error status {errorData.status} details: {errorData.message || res.statusText}
-              </small>
-            </div>
-          );
-          return;
-        }
-
+        const res = await fetch(`${API_ENDPOINT}/fetch/roi/data?schema=${deviceData.workspace}&key=${deviceData.key}`);
+        if (!res.ok) throw new Error(`Server responded with ${res.status}`);
         const data = await res.json();
-        setRegionAIConfig(checked_metthier_ai_config(data));
-        setBackupData(regionAIConfig);
 
+        if (data && Array.isArray(data.rule)) {
+          const migratedRules = data.rule.map((rule, index) => migrateRuleFormat(rule, index));
+          const checkedData = { rule: migratedRules };
+          setRegionAIConfig(checkedData);
+          setBackupData(JSON.parse(JSON.stringify(checkedData)));
+        } else {
+          setRegionAIConfig({ rule: [] });
+          setBackupData({ rule: [] });
+        }
       } catch (err) {
-        console.error("Failed to fetch data:", err);
-        error_fetct(
-          'Error',
-          <div>
-            <p>Failed to fetch rule data</p>
-            <small style={{ color: '#666', display: 'block', marginTop: '8px' }}>
-              {err.message}
-            </small>
-          </div>
-        );
+        showNotification('error', 'Error Fetching Rules', 'Failed to fetch rule data.', err.message);
       }
     };
 
     const fetchSnapshot = async () => {
+      if (!deviceData.rtsp) {
+          setSnapshotError(true);
+          showNotification('error', 'Camera Error', 'RTSP link is missing.');
+          return;
+      };
       try {
         const rtspLink = deviceData.rtsp;
-        console.log('rtsp link ==> :',rtspLink)
         const res = await fetch(`${API_ENDPOINT}/snapshot?rtsp=${encodeURIComponent(rtspLink)}`);
         
-        console.log('Original RTSP Link:', rtspLink);
-        console.log('Encoded RTSP Link:', encodeURIComponent(rtspLink));
-
         if (!res.ok) {
-          const errorData = await res.json();
-          console.error("Camera error:", errorData);
-          // Create error content based on error code
-          const getErrorHint = (code) => {
-            switch (code) {
-              case 'AUTH_ERROR':
-                return 'Please verify the username and password in the RTSP URL. Authentication failed.';
-              case 'TIMEOUT_ERROR':
-                return 'Try increasing the timeout value or check if the camera is accessible.';
-              case 'SERVER_ERROR':
-                return 'The camera server is not responding properly. Please check the camera status.';
-              case 'INVALID_STREAM':
-                return 'The RTSP URL format is invalid or the stream is not available.';
-              default:
-                return 'Please check your camera connection and try again.';
-            }
-          };
-
-          error_fetct(
-            'Camera Connection Error',
-            <div>
-              <p style={{ marginBottom: '8px', color: '#ff4d4f' }}>{errorData.message}</p>
-              <small style={{ color: '#999', display: 'block' }}>
-                {getErrorHint(errorData.code)}
-              </small>
-              <small style={{ color: '#666', display: 'block', marginTop: '8px' }}>
-                Error details: {errorData.details}
-              </small>
-            </div>
-          );
-          return;
+          const errorData = await res.json().catch(() => ({ message: 'Failed to parse error response.' }));
+          throw new Error(errorData.message || `Camera returned status ${res.status}`);
         }
 
         const blob = await res.blob();
         if (blob.size === 0) {
-          error_fetct(
-            'Empty Response',
-            'Received empty response from camera. Please check if the camera is streaming correctly.'
-          );
-          return;
+          throw new Error('Empty response from camera.');
         }
 
         const imageUrl = URL.createObjectURL(blob);
-        setImage(imageUrl);
+        const img = new window.Image();
+        img.src = imageUrl;
+        img.onload = () => {
+            setImageObj(img);
+            setSnapshotError(false);
+        };
+        img.onerror = () => {
+            throw new Error('Failed to load image from blob.');
+        };
+
       } catch (err) {
         console.error("Snapshot error:", err);
-        error_fetct(
-          'Connection Error',
-          <div>
-            <p>Failed to connect to the camera.</p>
-            <small style={{ color: '#999', display: 'block' }}>
-              Please check your network connection and camera status.
-            </small>
-          </div>
-        );
+        setSnapshotError(true);
+        setImageObj(null);
+        showNotification('error', 'Camera Connection Error', 'Could not load camera snapshot.', err.message);
       }
     };
 
@@ -265,254 +178,113 @@ function Tools() {
 
   const handleEditRegionZoom = (e) => {
     if (!dataSelectedROI || e.evt.button !== 0 || enableDraw === false) return;
-
     const stage = e.target.getStage();
     const mousePos = stage.getPointerPosition();
-
-    // reascale for get a real values of position
     const realX = mousePos.x / stageSize.scale;
     const realY = mousePos.y / stageSize.scale;
     const newPoint = [realX, realY];
 
-    if (selectedTool === 'intrusion' || selectedTool === 'tripwire' || selectedTool === 'density') {
-      const updatedPoints = [...currentPoints, newPoint];
-      setCurrentPoints(updatedPoints);
+    if (['intrusion', 'tripwire', 'density'].includes(selectedTool)) {
+      setCurrentPoints(prev => [...prev, newPoint]);
     } else if (selectedTool === 'zoom') {
-      const [x1, y1] = newPoint;
-      const rectPoints = [x1, y1];
-
-      setDataSelectedROI(prev => ({
-        ...prev,
-        points: rectPoints,
-      }));
-
+      setDataSelectedROI(prev => ({ ...prev, points: [newPoint] }));
       setCurrentPoints([]);
     }
   }
 
   const handleEditIntrusion = (e) => {
     if (!dataSelectedROI || enableDraw === false) return;
-
-    if (e && e.evt) {
-      e.evt.preventDefault();
-    }
-
-    if ((selectedTool === 'intrusion' || selectedTool === 'density') && currentPoints.length >= 3) {
-      setDataSelectedROI(prev => ({
-        ...prev,
-        points: currentPoints,
-      }));
-      setCurrentPoints([]);
-    } else if (selectedTool === 'tripwire' && currentPoints.length >= 2) {
-      setDataSelectedROI(prev => ({
-        ...prev,
-        points: currentPoints,
-      }));
+    if (e && e.evt) e.evt.preventDefault();
+    if ((['intrusion', 'density'].includes(selectedTool) && currentPoints.length >= 3) || (selectedTool === 'tripwire' && currentPoints.length >= 2)) {
+      setDataSelectedROI(prev => ({ ...prev, points: currentPoints }));
       setCurrentPoints([]);
     }
   };
 
   const handleDiscard = async () => {
     setRegionAIConfig(backupData || { rule: [] });
-    setOpenDiscardModal(false)
-    setDataSelectedROI(null)
+    setOpenDiscardModal(false);
+    setDataSelectedROI(null);
   }
 
-  // create new item in rule 
-  const addShapeToRegionAIConfig = (roi_type, points) => {
+  const addShapeToRegionAIConfig = (roi_type = 'tripwire', points = []) => {
     const index = regionAIConfig.rule.length;
-    if (points === undefined && roi_type === undefined) {
-      points = []
-      roi_type = 'tripwire'
-    }
-    const default_name = 'New Rule' + (index + 1);
     const newRule = {
-      points: points,
-      roi_type: roi_type,
+      points, roi_type, name: `New Rule ${index + 1}`,
       schedule: [{
-        surveillance_id: uuidv4(),
-        ai_type: "intrusion",
-        start_time: "00:00:00",
-        end_time: "23:59:59",
-        direction: "Both",
-        confidence_threshold: 0.5,
+        surveillance_id: uuidv4(), ai_type: "intrusion", start_time: "00:00:00",
+        end_time: "23:59:59", direction: "Both", confidence_threshold: 0.5,
         duration_threshold_seconds: 0
       }],
       created_date: new Date().toLocaleDateString("en-GB"),
-      roi_id: uuidv4(),
-      roi_status: 'OFF',
-      created_by: CREATOR,
-      name: default_name,
+      roi_id: uuidv4(), roi_status: 'OFF', created_by: CREATOR,
     };
-
-    const updatedConfig = {
-      ...regionAIConfig,
-      rule: [...(regionAIConfig?.rule || []), newRule],
-    };
-
-    setRegionAIConfig(updatedConfig);
+    setRegionAIConfig(prev => ({ ...prev, rule: [...(prev.rule || []), newRule] }));
   };
 
   const handleDeleteShape = (roi_type, index) => {
-    setRegionAIConfig(prevConfig => {
-      const updatedRules = prevConfig.rule.filter((_, i) => i !== index);
-      return {
-        ...prevConfig,
-        rule: updatedRules
-      };
-
-    });
-    if (selectedShape?.roi_type === roi_type && selectedShape?.index === index) {
+    setRegionAIConfig(prevConfig => ({
+      ...prevConfig,
+      rule: prevConfig.rule.filter((_, i) => i !== index)
+    }));
+    if (selectedShape?.index === index) {
       setSelectedShape({ roi_type: null, index: null });
-      setDataSelectedROI(null)
     }
   };
 
-  const handleChangeStatus = async (index, regionAIConfig, formValues) => {
-    if (!regionAIConfig?.rule || index < 0 || index >= regionAIConfig.rule.length) {
-      Modal.error({
-        title: 'Error',
-        content: "Selected rule not found.",
-      })
-      return;
-    }
-
-    if (!formValues?.roi_status && formValues.roi_status !== false) {
-      Modal.error({
-        title: "Error",
-        content: "Invalid status value."
-      })
-      return;
-    }
-    const activeStatus = formValues.roi_status === true ? 'ON' : 'OFF';
+  // --- **ฟังก์ชันที่ถูกต้องสำหรับรับค่า** ---
+  const handleChangeStatus = (index, formValues) => {
+    if (!regionAIConfig?.rule || index < 0 || index >= regionAIConfig.rule.length || formValues?.roi_status === undefined) return;
+    const activeStatus = formValues.roi_status ? 'ON' : 'OFF';
     const updatedRules = [...regionAIConfig.rule];
-    updatedRules[index] = {
-      ...updatedRules[index],
-      roi_status: activeStatus,
-    };
-
-    setRegionAIConfig({
-      ...regionAIConfig,
-      rule: updatedRules,
-    });
+    updatedRules[index] = { ...updatedRules[index], roi_status: activeStatus };
+    setRegionAIConfig({ ...regionAIConfig, rule: updatedRules });
   };
-
+  
   const updateStageSize = useCallback(() => {
-    if (imageObj) {
-      if (imageObj.width < 800 || imageObj.height < 800) {
-        Modal.warning({
-          title: 'Warning',
-          content: (
-            <div>
-              <p>
-                This snapshot looks like it is from a sub stream camera! Scale : {imageObj.width} x {imageObj.height}
-              </p>
-              <p>
-                You shouldn't draw with <span style={{ 
-                  color: 'gold', 
-                  fontWeight: 'bold',
-                  backgroundColor: '#fff1f0',
-                  padding: '2px 6px',
-                  borderRadius: '4px'
-                }}>Zoom</span> type
-              </p>
-            </div>
-          )
-        });
-      } else {
-        const modal = Modal.success({
-          title: 'Success!!',
-          content: `This snapshot Scale : ${imageObj.width} x ${imageObj.height}`,
-          footer: null
-        })
+    const imageToUse = imageObj || { width: 1280, height: 720 }; 
+    let widthFactor = 0.54;
+    if (window.innerWidth > 1200 && window.innerWidth < 1600) widthFactor = 0.53;
+    else if (window.innerWidth >= 768 && window.innerWidth <= 1200) widthFactor = 0.89;
 
-        setTimeout(() => {
-          modal.destroy();
-        }, 1000)
-      }
-
-      let widthFactor = 0.54;//monitor
-      if (window.innerWidth > 1200 && window.innerWidth < 1600) {
-        widthFactor = 0.53;//mac 
-      } else if (window.innerWidth >= 768 && window.innerWidth <= 1200) {
-        widthFactor = 0.89;//ipad 
-      } 
-
-      const scale = Math.min(
-        window.innerWidth * widthFactor / imageObj.width,
-        window.innerHeight * 0.612 / imageObj.height
-      );
-
-      setStageSize({
-        width: imageObj.width * scale,
-        height: imageObj.height * scale,
-        scale: scale,
-      });
-    }
+    const scale = Math.min(
+      (window.innerWidth * widthFactor) / imageToUse.width,
+      (window.innerHeight * 0.612) / imageToUse.height
+    );
+    setStageSize({ width: imageToUse.width * scale, height: imageToUse.height * scale, scale });
   }, [imageObj]);
 
   const handleSave = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINT}/save-region-config?customer=${selectedCustomer}&customerSite=${selectedCustomerSite}&cameraName=${selectedCameraName}`, {
+      const response = await fetch(`${API_ENDPOINT}/save-region-config?customer=${selectedCustomer}&cameraId=${selectedCameraId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(regionAIConfig),
       });
-
-      if (response.ok) {
-        const modal = Modal.success({
-          title: 'Success',
-          content: 'Successfully Saved Configuration',
-          footer: null,
-
-        })
-        setTimeout(() => {
-          modal.destroy();
-        }, 1500);
-        //close modal
-        setOpenSaveModal(false);
-      } else {
-        Modal.error({
-          title: 'Error',
-          content: 'Failed to save configuration. Please try again later.'
-        })
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Save failed');
       }
+      showNotification('success', 'Success', 'Configuration saved successfully.');
+      setOpenSaveModal(false);
     } catch (error) {
-      Modal.error({
-        title: "Error",
-        content: `An error occurred while saving the configuration : ${error.message}`
-      })
-      console.error(error);
+      showNotification('error', 'Save Error', 'An error occurred while saving.', error.message);
+      setOpenSaveModal(false);
     }
   };
 
   const handleResetPoints = () => {
-    setDataSelectedROI(prev => ({
-      ...prev,
-      points: [],
-    }));
+    setDataSelectedROI(prev => ({ ...prev, points: [] }));
     setCurrentPoints([]);
   }
 
   useEffect(() => {
-    if (!regionAIConfig || !selectedShape.roi_type || selectedShape.index === null) return;
-
-    const { roi_type, index } = selectedShape;
-    const selectedRule = regionAIConfig.rule[index]
-
-    if (selectedRule) {
-      setDataSelectedROI(selectedRule);
+    if (regionAIConfig?.rule && selectedShape.index !== null) {
+      setDataSelectedROI(regionAIConfig.rule[selectedShape.index]);
+    } else {
+      setDataSelectedROI(null);
     }
-  }, [selectedShape]);
-
-  useEffect(() => {
-    if (image) {
-      const img = new window.Image();
-      img.src = image;
-      img.onload = () => setImageObj(img);
-      console.log(imageObj)
-    }
-  }, [image]);
+  }, [selectedShape, regionAIConfig]);
 
   useEffect(() => {
     updateStageSize();
@@ -521,76 +293,41 @@ function Tools() {
   }, [updateStageSize]);
 
   useEffect(() => {
-    if (!dataSelectedROI) return;
-    setSelectedTool(dataSelectedROI.roi_type)
+    if (!dataSelectedROI || selectedShape.index === null) return;
     setRegionAIConfig(prevConfig => {
-      const currentRule = prevConfig.rule[selectedShape.index];
-      const isSame = JSON.stringify(currentRule) === JSON.stringify(dataSelectedROI);
-      if (isSame) return prevConfig;
-
       const updatedRules = [...prevConfig.rule];
       updatedRules[selectedShape.index] = dataSelectedROI;
-
-      return {
-        ...prevConfig,
-        rule: updatedRules,
-      };
+      return { ...prevConfig, rule: updatedRules };
     });
+    setSelectedTool(dataSelectedROI.roi_type);
   }, [dataSelectedROI]);
 
   useEffect(() => {
-    const zoomCount = regionAIConfig?.rule?.filter(item => item.roi_type === 'zoom').length || 0;
-    setZoomCount(zoomCount);
-  }, [regionAIConfig.rule])
+    setZoomCount(regionAIConfig?.rule?.filter(item => item.roi_type === 'zoom').length || 0);
+  }, [regionAIConfig.rule]);
+
+  const isLoading = !imageObj && !snapshotError;
 
   return (
     <>
       <div className="container_tools">
         <div className="header_tools_nav">
-          <Breadcrumb
-            items={[
-              {
-                href: '/',
-                title: (
-                  <>
-                    <span>All Devices</span>
-                  </>
-                ),
-              },
-              {
-                href: '',
-                title: (
-                  <>
-                    <span className="active_title">{selectedCameraName}</span>
-                  </>
-                ),
-              },
-            ]}
-          />
+          <Breadcrumb items={[{ href: '/', title: <span>All Devices</span> }, { title: <span className="active_title">{selectedCameraName}</span> }]} />
           <div className="device_control">
-            <a href="/">
-              <p className="cameraName_title">
-                <LeftOutlined /> {selectedCameraName}
-              </p>
-            </a>
+            <a href="/"><p className="cameraName_title"><LeftOutlined /> {selectedCameraName}</p></a>
           </div>
         </div>
-
         <div className="tools_box_main">
           <div className="canvas_box">
             <div className="draw_image">
-              {imageObj ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    cursor: 'crosshair',
-                    border: enableDraw
-                      ? '4px solid #3c82f6'
-                      : '4px solid #eff1f5',
-                  }}
-                >
+              {isLoading ? (
+                <div className='loading_waiting_imageObj'>
+                  <DotLottieReact src="https://lottie.host/5833f292-1a94-4c8a-ba9e-80f2c5745a76/D1olOXEce6.lottie" loop autoplay />
+                </div>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'center', cursor: 'crosshair', border: enableDraw ? '4px solid #3c82f6' : '4px solid #eff1f5' }}>
                   <DrawingCanvas
+                    snapshotError={snapshotError}
                     imageObj={imageObj}
                     stageSize={stageSize}
                     selectedTool={selectedTool}
@@ -603,71 +340,27 @@ function Tools() {
                     onMouseMove={handleMouseMove}
                   />
                 </div>
-              ) : (
-                <div className='loading_waiting_imageObj'>
-                  <div>
-                    <DotLottieReact
-                      src="https://lottie.host/5833f292-1a94-4c8a-ba9e-80f2c5745a76/D1olOXEce6.lottie"
-                      loop
-                      autoplay
-                    />
-                  </div>
-                </div>
               )}
             </div>
-
-            {enableDraw === true ? (
-              <div className="button_control">
-                <div className="box_text_guild_drawEnd">
-                  <SignatureOutlined /> Draw the Rule on Camera Canvas &{' '}
-                  <strong>RIGHT-CLICK</strong> to Finish
-                </div>
-                <div className="box_button_control_drawwing">
-                  <Button
-                    onClick={() => {
-                      handleEditIntrusion();
-                      setEnableDraw(false);
-                    }}
-                    style={{ minWidth: '120px' }}
-                    className="save_button"
-                    variant="solid"
-                  >
-                    <SaveOutlined /> Save
-                  </Button>
-
-
-
-                  <Button
-                    disabled={selectedShape.index === null}
-                    style={{ minWidth: '120px' }}
-                    onClick={() => {
-                      handleResetPoints();
-                    }}
-                    color="danger"
-                    variant="outlined"
-                  >
-                    clear
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="button_control">
-                <div className="box_text_guild_drawwing">
-                  <InfoCircleOutlined /> Enable Draw Mode to Draw the Rules
-                </div>
-                <div className="box_button_control_drawwing">
-                  <Button
-                    onClick={() => setEnableDraw(true)}
-                    color="primary"
-                    variant="solid"
-                  >
-                    <SignatureOutlined /> Enable Draw Mode
-                  </Button>
-                </div>
-              </div>
-            )}
+            <div className="button_control">
+              {enableDraw ? (
+                <>
+                  <div className="box_text_guild_drawEnd"><SignatureOutlined /> Draw the Rule & <strong>RIGHT-CLICK</strong> to Finish</div>
+                  <div className="box_button_control_drawwing">
+                    <Button onClick={() => { handleEditIntrusion(); setEnableDraw(false); }} className="save_button"><SaveOutlined /> Save</Button>
+                    <Button disabled={!dataSelectedROI} onClick={handleResetPoints} danger>Clear</Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="box_text_guild_drawwing"><InfoCircleOutlined /> Enable Draw Mode to Draw the Rules</div>
+                  <div className="box_button_control_drawwing">
+                    <Button onClick={() => setEnableDraw(true)} type="primary"><SignatureOutlined /> Enable Draw Mode</Button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-
           <div className="tools_side">
             <Sidebar
               maxTotalRegion={MAX_TOTAL_REGION}
@@ -675,106 +368,29 @@ function Tools() {
               handleDeleteShape={handleDeleteShape}
               addShapeToRegionAIConfig={addShapeToRegionAIConfig}
               regionAIConfig={regionAIConfig}
-              setRegionAIConfig={setRegionAIConfig}
               selectedShape={selectedShape}
               handleChangeStatus={handleChangeStatus}
             />
           </div>
         </div>
-
         <div className="edit_box">
-          <SetupEditor
-            dataSelectedROI={dataSelectedROI}
-            setDataSelectedROI={setDataSelectedROI}
-            cameraName={selectedCameraName}
-            setSelectedTool={setSelectedTool}
-            handleResetPoints={handleResetPoints}
-            MAX_ZOOM_REGION={MAX_ZOOM_REGION}
-            zoomCount={zoomCount}
-          />
+          <SetupEditor {...{ dataSelectedROI, setDataSelectedROI, setSelectedTool, handleResetPoints, MAX_ZOOM_REGION, zoomCount }} />
         </div>
-
         <div className="footer_bar">
           <div className="box_bottom_save">
-
-            {/* Discard button and Modal */}
-            <Button
-              style={{ minWidth: '120px' }}
-              color="danger"
-              variant="outlined"
-              onClick={() => {
-                showModalDiscard();
-              }}
-            >
-              Discard Change
-            </Button>
-            <Modal
-              title={
-                <span>
-                  <ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} />
-                  Are you sure you want to discard changes?
-                </span>
-              }
-              open={openDiscardModal}
-              onOk={() => {
-                handleDiscard();
-              }}
-              onCancel={closeModal}
-              okText="Discard"
-              cancelText="Cancel"
-              okButtonProps={{
-                className: 'custom-ok-button-discard',
-              }}
-              cancelButtonProps={{
-                className: 'custom-cancel-button',
-              }}
-            >
-              <p>  This action cannot be undone</p>
-
+            <Button onClick={showModalDiscard} danger>Discard Change</Button>
+            <Modal title={<span><ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} /> Discard Changes?</span>} open={openDiscardModal} onOk={handleDiscard} onCancel={closeModal} okText="Discard" cancelText="Cancel" okButtonProps={{ danger: true }}>
+              <p>This action cannot be undone.</p>
             </Modal>
-
-            {/* Save button and Modal */}
-
-            <Button
-              onClick={() => {
-                showModalSave();
-              }}
-              style={{ minWidth: '120px' }}
-              className="save_button"
-              variant="solid"
-            >
-              Apply
-            </Button>
-            <Modal
-              title={
-                <span>
-                  <ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} />
-                  Do you want to apply all these changes?
-                </span>
-              }
-              open={openSaveModal}
-              onOk={() => {
-                handleSave();
-              }}
-              onCancel={closeModal}
-              okText="Confirm"
-              cancelText="Cancel"
-              okButtonProps={{
-                className: 'custom-ok-button-save',
-              }}
-              cancelButtonProps={{
-                className: 'custom-cancel-button',
-              }}
-            >
-              <p>    This will update your data & restart the device</p>
-
+            <Button onClick={showModalSave} type="primary">Apply</Button>
+            <Modal title={<span><ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} /> Apply Changes?</span>} open={openSaveModal} onOk={handleSave} onCancel={closeModal} okText="Confirm" cancelText="Cancel">
+              <p>This will update your data & restart the device.</p>
             </Modal>
           </div>
         </div>
       </div>
     </>
   );
-
 }
 
 export default Tools;

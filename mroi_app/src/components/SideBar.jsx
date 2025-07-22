@@ -23,15 +23,18 @@ const Sidebar = ({
   handleChangeStatus
 }) => {
   const rule = regionAIConfig?.rule || [];
-
-  useEffect(() => {
-    if (selectedShape) setSelectedItem(selectedShape.index);
-  }, [selectedShape]);
-
-  const [configStatusButton, setConfigStatusButton] = useState({});
   const [selectedItem, setSelectedItem] = useState(null);
   const [openModalDelete, setOpenModalDelete] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  
+  useEffect(() => {
+    if (selectedShape) {
+        setSelectedItem(selectedShape.index);
+    } else {
+        setSelectedItem(null);
+    }
+  }, [selectedShape]);
+
 
   const showDeleteModal = (roi_type, index) => {
     setItemToDelete({ roi_type, index });
@@ -45,19 +48,6 @@ const Sidebar = ({
     setOpenModalDelete(false);
     setItemToDelete(null);
   };
-
-  useEffect(() => {
-    if (
-      Object.keys(configStatusButton).length === 0 &&
-      regionAIConfig.rule.length > 0
-    ) {
-      const initialStatus = {};
-      regionAIConfig.rule.forEach((region, index) => {
-        initialStatus[`${region.roi_type}-${index}`] = region.roi_status;
-      });
-      setConfigStatusButton(initialStatus);
-    }
-  }, [regionAIConfig?.rule.length]);
 
   return (
     <div className="side_bar">
@@ -101,56 +91,30 @@ const Sidebar = ({
                   onClick={() => setSelectedShape({ roi_type: region.roi_type, index })}
                 >
                   <span className="item_name">
-                    {region.roi_type === 'intrusion' && (
-                      <>
-                        <ImportOutlined />
-                        {region.name}
-                      </>
-                    )}
-                    {region.roi_type === 'tripwire' && (
-                      <>
-                        <VerticalAlignMiddleOutlined />
-                        {region.name}
-                      </>
-                    )}
-                    {region.roi_type === 'zoom' && (
-                      <>
-                        <ExpandOutlined /> {region.name}
-                      </>
-                    )}
-                    {region.roi_type === 'density' && (
-                      <>
-                        <TeamOutlined /> {region.name}
-                      </>
-                    )}
+                    {region.roi_type === 'intrusion' && <><ImportOutlined />{region.name}</>}
+                    {region.roi_type === 'tripwire' && <><VerticalAlignMiddleOutlined />{region.name}</>}
+                    {region.roi_type === 'zoom' && <><ExpandOutlined /> {region.name}</>}
+                    {region.roi_type === 'density' && <><TeamOutlined /> {region.name}</>}
                   </span>
                   <span className="item_type">
-                    {region.roi_type === 'intrusion' && (
-                      <Tag className='button_show_type' color="red"><ImportOutlined /> Intrusion</Tag>
-                    )}
-                    {region.roi_type === 'tripwire' && (
-                      <Tag className='button_show_type' color="cyan"><VerticalAlignMiddleOutlined /> Tripwire</Tag>
-                    )}
-                    {region.roi_type === 'zoom' && (
-                      <Tag className='button_show_type' color="gold"><ExpandOutlined />Zoom</Tag>
-                    )}
-                    {region.roi_type === 'density' && (
-                      <Tag className='button_show_type' color="geekblue"><TeamOutlined /> Density</Tag>
-                    )}
+                    {region.roi_type === 'intrusion' && (<Tag className='button_show_type' color="red"><ImportOutlined /> Intrusion</Tag>)}
+                    {region.roi_type === 'tripwire' && (<Tag className='button_show_type' color="cyan"><VerticalAlignMiddleOutlined /> Tripwire</Tag>)}
+                    {region.roi_type === 'zoom' && (<Tag className='button_show_type' color="gold"><ExpandOutlined />Zoom</Tag>)}
+                    {region.roi_type === 'density' && (<Tag className='button_show_type' color="geekblue"><TeamOutlined /> Density</Tag>)}
                   </span>
                   <div className="tools_setup_item">
                     <span className="status_switch">
+                      {/* --- **ส่วนที่แก้ไข** --- */}
                       <Switch
                         checked={region.roi_status === 'ON'}
-                        onChange={(checked) => {
+                        onChange={(checked, event) => {
+                          event.stopPropagation(); // หยุดไม่ให้ event click ลามไปถึง div แม่
                           const formValues = { roi_status: checked };
-                          handleChangeStatus(index, regionAIConfig, formValues);
+                          handleChangeStatus(index, formValues); // ส่งแค่ index และ formValues
                         }}
-                        style={{
-                          backgroundColor:
-                            region.roi_status === 'ON' ? '#4fce66' : '#adb4c1'
-                        }}
+                        style={{ backgroundColor: region.roi_status === 'ON' ? '#4fce66' : '#adb4c1' }}
                       />
+                      {/* --- จบส่วนที่แก้ไข --- */}
                     </span>
                     <span
                       className="bin"
@@ -182,13 +146,10 @@ const Sidebar = ({
         </div>
       </div>
 
-      {/* Del modal  */}
       <Modal
         title={
           <span>
-            <ExclamationCircleFilled
-              style={{ color: '#faad14', marginRight: 8 }}
-            />
+            <ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} />
             Are you sure you want to delete this Rule?
           </span>
         }
@@ -200,12 +161,8 @@ const Sidebar = ({
         }}
         okText="Delete"
         cancelText="Cancel"
-        okButtonProps={{
-          className: 'custom-ok-button-delete',
-        }}
-        cancelButtonProps={{
-          className: 'custom-cancel-button',
-        }}
+        okButtonProps={{ className: 'custom-ok-button-delete' }}
+        cancelButtonProps={{ className: 'custom-cancel-button' }}
       >
         <p>This action cannot be undone.</p>
       </Modal>

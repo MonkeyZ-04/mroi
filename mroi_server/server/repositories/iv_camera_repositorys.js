@@ -5,25 +5,62 @@ class CameraRepository {
   async get_schemas_name() {
     try {
       const [results] = await sequelize.query(
-        `select DISTINCT(schemaname) from pg_stat_user_tables ORDER BY schemaname ASC`
+        `SELECT schemaname FROM pg_catalog.pg_tables WHERE schemaname NOT IN ('pg_catalog', 'information_schema') GROUP BY schemaname ORDER BY schemaname ASC`
       );
       return results.map((r) => r.schemaname);
     } catch (error) {
       console.error("Error in getSchema :", error);
       throw error;
     }
-  } // END get schema name 
+  }
+
+  async get_all_cameras_from_all_schemas() {
+    try {
+      const schemas = await this.get_schemas_name();
+      let allCameras = [];
+
+      for (const schema of schemas) {
+        try {
+          const tableCheckQuery = `
+            SELECT EXISTS (
+              SELECT FROM information_schema.tables 
+              WHERE table_schema = '${schema}' AND table_name = 'iv_cameras'
+            );
+          `;
+          const [tableExistsResult] = await sequelize.query(tableCheckQuery);
+          if (!tableExistsResult[0].exists) {
+            console.log(`Schema "${schema}" does not have an "iv_cameras" table, skipping.`);
+            continue;
+          }
+          
+          const camerasInSchema = await this.get_cameras_data(schema);
+          
+          const camerasWithSchema = camerasInSchema.map(cam => ({
+            ...cam,
+            workspace: schema 
+          }));
+          allCameras = allCameras.concat(camerasWithSchema);
+
+        } catch (innerError) {
+          console.error(`Could not fetch or process cameras from schema "${schema}":`, innerError.message);
+        }
+      }
+      
+      return allCameras;
+    } catch (error) {
+      console.error("Error in get_all_cameras_from_all_schemas: ", error);
+      throw error;
+    }
+  }
 
   async get_roi_data(schema, key) {
     try {
       await sequelize.query(`SET search_path TO ${schema}`);
-
       const result = await iv_cameras.findOne({
         attributes: ["metthier_ai_config"],
         where: { iv_camera_uuid: key },
       });
-      
-      return result.metthier_ai_config;
+      return result ? result.metthier_ai_config : null;
     } catch (error) {
       console.error("Error in get_roi_data :", error);
       throw error;
@@ -31,54 +68,39 @@ class CameraRepository {
   }
 
   async get_cameras_data(schemaName) {
+    const safeSchemaName = String(schemaName).replace(/[^a-zA-Z0-9_]/g, '');
     try {
-      await sequelize.query(`SET search_path TO :schema`, {
-        replacements: { schema: schemaName },
-      });
-
-      return await iv_cameras.findAll({
-        attributes: [
-          "iv_camera_uuid",
-          "camera_name",
-          "camera_site",
-          "rtsp",
-          "metthier_ai_config",
-          "device_id",
-          "camera_type",
-        ],
-        where: {
-          camera_site: {
-            [Op.and]: [{ [Op.not]: null }, { [Op.not]: "" }],
-          },
-        },
-        order: [["camera_site", "ASC"]],
-      });
+      const query = `
+        SELECT "iv_camera_uuid", "camera_name", "camera_name_display", "camera_site",
+               "rtsp", "metthier_ai_config", "device_id", "camera_type"
+        FROM "${safeSchemaName}"."iv_cameras"
+        ORDER BY "camera_site" ASC;
+      `;
+      const [results] = await sequelize.query(query);
+      return results;
     } catch (error) {
-      console.error("Error in get data in iv_cameras : ", error);
-      throw error;
+      console.error(`Error in get_cameras_data for schema "${schemaName}": `, error.message);
+      return [];
     }
-  } // END get each rows data in schema
+  }
 
-  async update_metthier_ai_config(schemaName, site, cameraName, config) {
+  async update_metthier_ai_config(schemaName, cameraId, config) {
     try {
       await sequelize.query(`SET search_path TO :schema`, {
         replacements: { schema: schemaName },
       });
 
-      return await iv_cameras.update(
+      const [affectedRows] = await iv_cameras.update(
         { metthier_ai_config: config },
-        {
-          where: {
-            camera_site: site,
-            camera_name: cameraName,
-          },
-        }
+        { where: { iv_camera_uuid: cameraId } }
       );
+
+      return affectedRows;
     } catch (error) {
       console.error("Error in update_metthier_ai_config : ", error);
       throw error;
     }
-  } //END update data in metthier_ai_config 
+  }
 }
 
 module.exports = new CameraRepository();

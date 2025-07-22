@@ -1,5 +1,6 @@
 const cameraRepo = require("../repositories/iv_camera_repositorys");
 const ffmpegService = require("../services/ffmpeg_snapshot_service");
+const sshService = require("../services/ssh_service");
 
 exports.get_schemas_name = async (req, res) => {
   try {
@@ -55,16 +56,28 @@ exports.update_metthier_ai_config = async (req, res) => {
   const config = req.body;
 
   if (!customer || !cameraId || !config) {
-    return res.status(400).json({ message: 'Missing required fields: customer, cameraId, or config.' });
+    return res.status(400).json({ message: 'Missing required fields.' });
   }
 
   try {
     const affectedRows = await cameraRepo.update_metthier_ai_config(customer, cameraId, config);
 
     if (affectedRows > 0) {
-      res.status(200).json({ message: 'Region AI config saved successfully.' });
+      if (config.docker_info) {
+        try {
+          await sshService.executeCommand(config.docker_info);
+          res.status(200).json({ message: 'Config saved and restart command sent successfully.' });
+        } catch (sshError) {
+          res.status(207).json({ 
+            message: 'Config saved, but failed to send restart command.',
+            error: sshError.message 
+          });
+        }
+      } else {
+        res.status(200).json({ message: 'Region AI config saved successfully.' });
+      }
     } else {
-      res.status(404).json({ message: 'Save failed: No matching camera found with the provided ID.' });
+      res.status(404).json({ message: 'Save failed: No matching camera found to update.' });
     }
   } catch (err) {
     console.error(err);

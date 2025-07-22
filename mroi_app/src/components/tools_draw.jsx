@@ -23,7 +23,6 @@ const CREATOR = import.meta.env.VITE_CREATOR;
 const MAX_TOTAL_REGION = parseInt(import.meta.env.VITE_MAX_TOTAL_REGION) ;
 const MAX_ZOOM_REGION = parseInt(import.meta.env.VITE_MAX_ZOOM_REGION);
 
-// Function to migrate old rule format to the new one
 const migrateRuleFormat = (rule, index) => {
   if (rule.roi_type) return rule;
 
@@ -232,7 +231,6 @@ function Tools() {
     }
   };
 
-  // --- **ฟังก์ชันที่ถูกต้องสำหรับรับค่า** ---
   const handleChangeStatus = (index, formValues) => {
     if (!regionAIConfig?.rule || index < 0 || index >= regionAIConfig.rule.length || formValues?.roi_status === undefined) return;
     const activeStatus = formValues.roi_status ? 'ON' : 'OFF';
@@ -255,11 +253,16 @@ function Tools() {
   }, [imageObj]);
 
   const handleSave = async () => {
+    const configToSave = {
+      ...regionAIConfig,
+      docker_info: `ssh linaro@192.168.1.100 "docker restart cam7"` // cam7 -> change to your Docker container name
+    };
+
     try {
       const response = await fetch(`${API_ENDPOINT}/save-region-config?customer=${selectedCustomer}&cameraId=${selectedCameraId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(regionAIConfig),
+        body: JSON.stringify(configToSave), // ส่ง JSON ที่มี docker_info
       });
       if (!response.ok) {
         const errorData = await response.json();

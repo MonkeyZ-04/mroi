@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { TimePicker, InputNumber, Select, Input } from 'antd';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import debounce from 'lodash.debounce'
+import debounce from 'lodash/debounce'; // <-- **แก้ไขบรรทัดนี้**
 
 dayjs.extend(customParseFormat);
 
@@ -59,12 +59,11 @@ function ScheduleControls({ onChangeAll, scheduleData }) {
     }
   }, [localStartTime, localEndTime, localConfidenceThreshold, localThresholdDuration, localDirection, localAIType]);
 
-  // Debounced for in for protect (react re-render)
   const debouncedSetLocalAIType = useCallback(
     debounce((value) => {
       setLocalAIType(value);
     },30),
-    [] // empty for ensure create only onc
+    []
   )
 
   return (

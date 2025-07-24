@@ -58,21 +58,11 @@ const Sidebar = ({
         <div className="roi_list_items">
           {rule?.length === 0 ? (
             <div className="still_not_drawed">
-              <div>
-                <SisternodeOutlined className="no_region_icon" />
-              </div>
-              <div>
-                <p>The ROI has not yet been created... </p>
-              </div>
+              <div><SisternodeOutlined className="no_region_icon" /></div>
+              <div><p>The ROI has not yet been created... </p></div>
               <div className="box_button_create_rule">
                 {rule?.length < maxTotalRegion && (
-                  <Button
-                    onClick={() => {
-                      addShapeToRegionAIConfig();
-                    }}
-                    className="button_create_rule"
-                    variant="filled"
-                  >
+                  <Button onClick={() => addShapeToRegionAIConfig()} className="button_create_rule" variant="filled">
                     <PlusOutlined /> Create a New Rule
                   </Button>
                 )}
@@ -83,11 +73,7 @@ const Sidebar = ({
               {rule?.map((region, index) => (
                 <div
                   key={uuidv4()}
-                  className={
-                    selectedItem === index
-                      ? 'items_in_sidebar_focus'
-                      : 'items_in_sidebar'
-                  }
+                  className={selectedItem === index ? 'items_in_sidebar_focus' : 'items_in_sidebar'}
                   onClick={() => setSelectedShape({ roi_type: region.roi_type, index })}
                 >
                   <span className="item_name">
@@ -103,19 +89,19 @@ const Sidebar = ({
                     {region.roi_type === 'density' && (<Tag className='button_show_type' color="geekblue"><TeamOutlined /> Density</Tag>)}
                   </span>
                   <div className="tools_setup_item">
-                    <span className="status_switch">
-                      {/* --- **ส่วนที่แก้ไข** --- */}
-                      <Switch
-                        checked={region.roi_status === 'ON'}
-                        onChange={(checked, event) => {
-                          event.stopPropagation(); // หยุดไม่ให้ event click ลามไปถึง div แม่
-                          const formValues = { roi_status: checked };
-                          handleChangeStatus(index, formValues); // ส่งแค่ index และ formValues
-                        }}
-                        style={{ backgroundColor: region.roi_status === 'ON' ? '#4fce66' : '#adb4c1' }}
-                      />
-                      {/* --- จบส่วนที่แก้ไข --- */}
-                    </span>
+                    {region.roi_type !== 'zoom' && (
+                      <span className="status_switch">
+                        <Switch
+                          checked={region.roi_status === 'ON'}
+                          onChange={(checked, event) => {
+                            event.stopPropagation();
+                            const formValues = { roi_status: checked };
+                            handleChangeStatus(index, formValues);
+                          }}
+                          style={{ backgroundColor: region.roi_status === 'ON' ? '#4fce66' : '#adb4c1' }}
+                        />
+                      </span>
+                    )}
                     <span
                       className="bin"
                       onClick={(e) => {
@@ -130,13 +116,7 @@ const Sidebar = ({
               ))}
               <div className="box_button_create_rule">
                 {rule.length < maxTotalRegion && (
-                  <Button
-                    onClick={() => {
-                      addShapeToRegionAIConfig();
-                    }}
-                    className="button_create_rule"
-                    variant="filled"
-                  >
+                  <Button onClick={() => addShapeToRegionAIConfig()} className="button_create_rule" variant="filled">
                     <PlusOutlined /> Create a New Rule
                   </Button>
                 )}
@@ -145,25 +125,7 @@ const Sidebar = ({
           )}
         </div>
       </div>
-
-      <Modal
-        title={
-          <span>
-            <ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} />
-            Are you sure you want to delete this Rule?
-          </span>
-        }
-        open={openModalDelete}
-        onOk={handleConfirmDelete}
-        onCancel={() => {
-          setOpenModalDelete(false);
-          setItemToDelete(null);
-        }}
-        okText="Delete"
-        cancelText="Cancel"
-        okButtonProps={{ className: 'custom-ok-button-delete' }}
-        cancelButtonProps={{ className: 'custom-cancel-button' }}
-      >
+      <Modal title={<span><ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} /> Are you sure you want to delete this Rule?</span>} open={openModalDelete} onOk={handleConfirmDelete} onCancel={() => { setOpenModalDelete(false); setItemToDelete(null); }} okText="Delete" cancelText="Cancel" okButtonProps={{ className: 'custom-ok-button-delete' }} cancelButtonProps={{ className: 'custom-cancel-button' }}>
         <p>This action cannot be undone.</p>
       </Modal>
     </div>

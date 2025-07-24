@@ -1,5 +1,4 @@
 const { iv_cameras, sequelize } = require("../models");
-const { Op } = require("sequelize");
 
 class CameraRepository {
   async get_schemas_name() {
@@ -35,10 +34,7 @@ class CameraRepository {
           
           const camerasInSchema = await this.get_cameras_data(schema);
           
-          const camerasWithSchema = camerasInSchema.map(cam => ({
-            ...cam,
-            workspace: schema 
-          }));
+          const camerasWithSchema = camerasInSchema.map(cam => ({ ...cam, workspace: schema }));
           allCameras = allCameras.concat(camerasWithSchema);
 
         } catch (innerError) {
@@ -84,14 +80,39 @@ class CameraRepository {
     }
   }
 
-  async update_metthier_ai_config(schemaName, cameraId, config) {
+  async update_metthier_ai_config(schemaName, cameraId, newConfig) {
     try {
       await sequelize.query(`SET search_path TO :schema`, {
         replacements: { schema: schemaName },
       });
 
+      const camera = await iv_cameras.findOne({
+        where: { iv_camera_uuid: cameraId }
+      });
+
+      if (!camera) {
+        return 0;
+      }
+
+      const existingConfig = camera.metthier_ai_config || {};
+      let finalConfig;
+
+      // **ตรวจสอบเงื่อนไข:** ถ้าข้อมูลเดิมเป็นแค่ {"rule": []} ให้เขียนทับด้วยข้อมูลใหม่
+      // โดยการเช็คว่ามี key 'rule' และ array ว่าง และมี key แค่ 1 ตัว
+      if (existingConfig && Array.isArray(existingConfig.rule) && existingConfig.rule.length === 0 && Object.keys(existingConfig).length === 1) {
+        finalConfig = newConfig;
+        console.log("Overwrite logic applied.");
+      } else {
+        // (Merge)
+        finalConfig = {
+          ...existingConfig,
+          ...newConfig
+        };
+        console.log("Merge logic applied.");
+      }
+      
       const [affectedRows] = await iv_cameras.update(
-        { metthier_ai_config: config },
+        { metthier_ai_config: finalConfig },
         { where: { iv_camera_uuid: cameraId } }
       );
 

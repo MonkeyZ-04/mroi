@@ -1,0 +1,135 @@
+{
+  "rule": [
+    {
+      "points": [
+        [
+          868.5407739312535,
+          655.1938697844238
+        ],
+        [
+          1195.501103886069,
+          479.2150210883535
+        ]
+      ],
+      "roi_type": "tripwire",
+      "name": "Test",
+      "schedule": [
+        {
+          "surveillance_id": "f4df7e10-a5e8-4e78-af40-481fbf83cb2b",
+          "ai_type": "intrusion",
+          "start_time": "00:00:00",
+          "end_time": "19:59:59",
+          "direction": "Both",
+          "confidence_threshold": 0.98,
+          "confidence_zoom": 0.5,
+          "duration_threshold_seconds": 0
+        },
+        {
+          "surveillance_id": "888e08b9-4e47-463c-ac07-f0589ee8697a",
+          "ai_type": "intrusion",
+          "start_time": "19:59:59",
+          "end_time": "21:59:59",
+          "direction": "Both",
+          "confidence_threshold": 0.9,
+          "confidence_zoom": 0.5,
+          "duration_threshold_seconds": 0
+        }
+      ],
+      "created_date": "22/07/2025",
+      "roi_id": "60428f42-7da8-4f63-af06-1f12d3be8bbf",
+      "roi_status": "ON",
+      "created_by": "METTHIER AI TEAMS"
+    },
+    {
+      "points": [
+        [
+          323.6102033307769,
+          184.3587938720735
+        ]
+      ],
+      "roi_type": "zoom",
+      "name": "New Rule 2",
+      "roi_id": "f52539dc-b0f4-48de-96b4-1355345ca80b",
+      "created_date": "23/07/2025",
+      "created_by": "METTHIER AI TEAMS",
+      "surveillance_id": "62285b26-e8a6-45d6-bd75-eb28f9835748"
+    },
+    {
+      "points": [
+        [
+          135.81568119063695,
+          159.21895834406348
+        ],
+        [
+          82.16010343631125,
+          370.39357677934765
+        ],
+        [
+          311.8730456970182,
+          310.05797151212363
+        ],
+        [
+          368.8820970609893,
+          72.06752851362873
+        ]
+      ],
+      "roi_type": "intrusion",
+      "name": "New Rule 3",
+      "roi_id": "0eb6da9b-e50e-49c8-aa78-ccb9da1aac71",
+      "created_date": "23/07/2025",
+      "created_by": "METTHIER AI TEAMS",
+      "roi_status": "ON",
+      "schedule": [
+        {
+          "surveillance_id": "e367b05f-93c2-4e14-97ab-42b64dc3d14e",
+          "ai_type": "intrusion",
+          "start_time": "00:00:00",
+          "end_time": "23:59:59",
+          "direction": "Both",
+          "confidence_threshold": 0.5,
+          "confidence_zoom": 0.5,
+          "duration_threshold_seconds": 0
+        }
+      ]
+    },
+    {
+      "points": [
+        [
+          154.2597860436864,
+          522.9085789826084
+        ],
+        [
+          595.2415657120508,
+          370.39357677934765
+        ],
+        [
+          580.1509344686467,
+          703.9153947842807
+        ],
+        [
+          144.19936521475034,
+          695.5354496082773
+        ]
+      ],
+      "roi_type": "density",
+      "name": "New Rule 4",
+      "roi_id": "9e241ba2-fcca-4a38-9624-768982b0e1fb",
+      "created_date": "23/07/2025",
+      "created_by": "METTHIER AI TEAMS",
+      "roi_status": "ON",
+      "schedule": [
+        {
+          "surveillance_id": "edcedbc6-87ec-414a-aa47-7b9e27ce312d",
+          "ai_type": "intrusion",
+          "start_time": "00:00:00",
+          "end_time": "23:59:59",
+          "direction": "Both",
+          "confidence_threshold": 0.5,
+          "confidence_zoom": 0.5,
+          "duration_threshold_seconds": 0
+        }
+      ]
+    }
+  ],
+  "docker_info": "ssh linaro@192.168.1.100 \"docker restart POC-TEST\""
+}

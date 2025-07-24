@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Button, Modal, Breadcrumb, notification } from 'antd';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { 
-  LeftOutlined, 
-  SaveOutlined, 
-  SignatureOutlined, 
-  InfoCircleOutlined, 
-  ExclamationCircleFilled 
+import {
+  LeftOutlined,
+  SaveOutlined,
+  SignatureOutlined,
+  InfoCircleOutlined,
+  ExclamationCircleFilled
 } from '@ant-design/icons';
 
 import 'antd/dist/reset.css';
@@ -24,7 +24,26 @@ const MAX_TOTAL_REGION = parseInt(import.meta.env.VITE_MAX_TOTAL_REGION) ;
 const MAX_ZOOM_REGION = parseInt(import.meta.env.VITE_MAX_ZOOM_REGION);
 
 const migrateRuleFormat = (rule, index) => {
-  if (rule.roi_type) return rule;
+  const isNewFormat = !!rule.roi_type;
+  const roiType = isNewFormat ? rule.roi_type : rule.type;
+
+  if (roiType === 'zoom') {
+    const newRule = {
+      points: rule.points,
+      roi_type: 'zoom',
+      name: rule.name || `Rule ${index + 1}`,
+      roi_id: rule.roi_id || uuidv4(),
+      created_date: rule.created_date || new Date().toLocaleDateString("en-GB"),
+      created_by: rule.created_by || CREATOR,
+      surveillance_id: rule.surveillance_id || (rule.schedule && rule.schedule.surveillance_id) || uuidv4(),
+    };
+    if (Array.isArray(rule.points) && !Array.isArray(rule.points[0])) {
+      newRule.points = [rule.points];
+    }
+    return newRule;
+  }
+
+  if (isNewFormat) return rule;
 
   const newRule = {
     points: rule.points,
@@ -45,12 +64,9 @@ const migrateRuleFormat = (rule, index) => {
       end_time: rule.schedule.end_time || "23:59:59",
       direction: "Both",
       confidence_threshold: rule.confidence_threshold || 0.5,
+      confidence_zoom: 0.5,
       duration_threshold_seconds: 0,
     });
-  }
-
-  if (newRule.roi_type === 'zoom' && Array.isArray(rule.points) && !Array.isArray(rule.points[0])) {
-      newRule.points = [rule.points];
   }
 
   return newRule;
@@ -208,16 +224,33 @@ function Tools() {
 
   const addShapeToRegionAIConfig = (roi_type = 'tripwire', points = []) => {
     const index = regionAIConfig.rule.length;
-    const newRule = {
-      points, roi_type, name: `New Rule ${index + 1}`,
-      schedule: [{
-        surveillance_id: uuidv4(), ai_type: "intrusion", start_time: "00:00:00",
-        end_time: "23:59:59", direction: "Both", confidence_threshold: 0.5,
-        duration_threshold_seconds: 0
-      }],
+    const isZoom = roi_type === 'zoom';
+
+    let newRule = {
+      points,
+      roi_type,
+      name: `New Rule ${index + 1}`,
+      roi_id: uuidv4(),
       created_date: new Date().toLocaleDateString("en-GB"),
-      roi_id: uuidv4(), roi_status: 'OFF', created_by: CREATOR,
+      created_by: CREATOR,
     };
+
+    if (isZoom) {
+      newRule.surveillance_id = uuidv4();
+    } else {
+      newRule.roi_status = 'OFF';
+      newRule.schedule = [{
+        surveillance_id: uuidv4(),
+        ai_type: "intrusion",
+        start_time: "00:00:00",
+        end_time: "23:59:59",
+        direction: "Both",
+        confidence_threshold: 0.5,
+        confidence_zoom: 0.5,
+        duration_threshold_seconds: 0,
+      }];
+    }
+
     setRegionAIConfig(prev => ({ ...prev, rule: [...(prev.rule || []), newRule] }));
   };
 
@@ -253,16 +286,39 @@ function Tools() {
   }, [imageObj]);
 
   const handleSave = async () => {
-    const configToSave = {
-      ...regionAIConfig,
-      docker_info: `ssh linaro@192.168.1.100 "docker restart cam7"` // cam7 -> change to your Docker container name
-    };
+    const configToSave = JSON.parse(JSON.stringify(regionAIConfig));
+
+    configToSave.docker_info = `ssh linaro@192.168.1.100 "docker restart ${selectedCameraName}"`;
+
+    const reorderedRules = configToSave.rule.map(rule => {
+      if (rule.roi_type === 'zoom') {
+        const { schedule, roi_status, ...zoomRule } = rule;
+        return zoomRule;
+      }
+      
+      if (Array.isArray(rule.schedule)) {
+        const reorderedSchedules = rule.schedule.map(sch => ({
+          surveillance_id: sch.surveillance_id,
+          ai_type: sch.ai_type,
+          start_time: sch.start_time,
+          end_time: sch.end_time,
+          direction: sch.direction,
+          confidence_threshold: sch.confidence_threshold,
+          confidence_zoom: sch.confidence_zoom,
+          duration_threshold_seconds: sch.duration_threshold_seconds,
+        }));
+        return { ...rule, schedule: reorderedSchedules };
+      }
+      return rule;
+    });
+
+    configToSave.rule = reorderedRules;
 
     try {
       const response = await fetch(`${API_ENDPOINT}/save-region-config?customer=${selectedCustomer}&cameraId=${selectedCameraId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(configToSave), // ส่ง JSON ที่มี docker_info
+        body: JSON.stringify(configToSave),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -282,7 +338,7 @@ function Tools() {
   }
 
   useEffect(() => {
-    if (regionAIConfig?.rule && selectedShape.index !== null) {
+    if (regionAIConfig?.rule && selectedShape.index !== null && regionAIConfig.rule[selectedShape.index]) {
       setDataSelectedROI(regionAIConfig.rule[selectedShape.index]);
     } else {
       setDataSelectedROI(null);

@@ -88,7 +88,7 @@ function TableComponent({ data }) {
             onClick={() => {
               const url = '/tools';
               const urlWithParams = `${url}?data=${encodeURIComponent(JSON.stringify(record))}`;
-              window.open(urlWithParams, '_blank');
+              navigate(urlWithParams);
             }}
           >
             {value ? ' Edit' : '+ Create ROI'}

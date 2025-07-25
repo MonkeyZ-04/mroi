@@ -34,7 +34,11 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
   };
 
   useEffect(() => {
-    fetch(`${API_ENDPOINT}/schemas`)
+    fetch(`${API_ENDPOINT}/schemas`, {
+      headers: {
+        'ngrok-skip-browser-warning': 'true'
+      }
+    })
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to fetch schemas (${res.status})`);
         return res.json();
@@ -64,7 +68,11 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
       ? `${API_ENDPOINT}/cameras/all`
       : `${API_ENDPOINT}/schemas/${selectedCustomer}`;
   
-    fetch(url)
+    fetch(url, {
+      headers: {
+        'ngrok-skip-browser-warning': 'true'
+      }
+    })
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to fetch device data (${res.status})`);
         return res.json();
@@ -106,8 +114,6 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
     return data.map((device) => {
       const rules = device.metthier_ai_config?.rule || [];
       
-      // --- **ส่วนที่แก้ไข** ---
-      // ปรับปรุง Logic การนับสถานะ Active ให้รองรับทั้ง Format เก่าและใหม่
       const activeRulesCount = rules.filter(
         (item) => item.roi_status === "ON" || item.status === "ON"
       ).length;
@@ -115,7 +121,6 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
       const hasActiveRules = rules.some(
         (item) => item.roi_status === "ON" || item.status === "ON"
       );
-      // --- จบส่วนที่แก้ไข ---
 
       return {
         key: device.iv_camera_uuid,
@@ -124,9 +129,9 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
         device_name: device.camera_name_display || device.camera_name || '',
         device_type: device.camera_type,
         slugID: "intrusioncctv",
-        amountActivate: activeRulesCount, // <-- ใช้ค่าที่คำนวณใหม่
+        amountActivate: activeRulesCount,
         ROI_object: rules.length,
-        ROI_status: hasActiveRules, // <-- ใช้ค่าที่คำนวณใหม่
+        ROI_status: hasActiveRules,
         action: rules.length > 0,
         rtsp: device.rtsp,
       };

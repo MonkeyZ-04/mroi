@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Button, Modal, Breadcrumb, notification } from 'antd';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { Link } from 'react-router-dom'; // 1. เพิ่มการ import Link เข้ามา
 import {
   LeftOutlined,
   SaveOutlined,
@@ -125,7 +126,11 @@ function Tools() {
     const fetchROIData = async () => {
       if (!deviceData.workspace || !deviceData.key) return;
       try {
-        const res = await fetch(`${API_ENDPOINT}/fetch/roi/data?schema=${deviceData.workspace}&key=${deviceData.key}`);
+        const res = await fetch(`${API_ENDPOINT}/fetch/roi/data?schema=${deviceData.workspace}&key=${deviceData.key}`, {
+          headers: {
+            'ngrok-skip-browser-warning': 'true'
+          }
+        });
         if (!res.ok) throw new Error(`Server responded with ${res.status}`);
         const data = await res.json();
 
@@ -151,7 +156,11 @@ function Tools() {
       };
       try {
         const rtspLink = deviceData.rtsp;
-        const res = await fetch(`${API_ENDPOINT}/snapshot?rtsp=${encodeURIComponent(rtspLink)}`);
+        const res = await fetch(`${API_ENDPOINT}/snapshot?rtsp=${encodeURIComponent(rtspLink)}`, {
+            headers: {
+              'ngrok-skip-browser-warning': 'true'
+            }
+        });
         
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({ message: 'Failed to parse error response.' }));
@@ -319,7 +328,10 @@ function Tools() {
     try {
       const response = await fetch(`${API_ENDPOINT}/save-region-config?customer=${selectedCustomer}&cameraId=${selectedCameraId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        },
         body: JSON.stringify(configToSave),
       });
       if (!response.ok) {
@@ -375,9 +387,22 @@ function Tools() {
     <>
       <div className="container_tools">
         <div className="header_tools_nav">
-          <Breadcrumb items={[{ href: '/', title: <span>All Devices</span> }, { title: <span className="active_title">{selectedCameraName}</span> }]} />
+          {/* 2. แก้ไข Breadcrumb */}
+          <Breadcrumb 
+            items={[
+              { 
+                title: <Link to="/">All Devices</Link>
+              }, 
+              { 
+                title: <span className="active_title">{selectedCameraName}</span> 
+              }
+            ]} 
+          />
           <div className="device_control">
-            <a href="/"><p className="cameraName_title"><LeftOutlined /> {selectedCameraName}</p></a>
+            {/* 3. เปลี่ยนจาก a href เป็น Link to */}
+            <Link to="/">
+              <p className="cameraName_title"><LeftOutlined /> {selectedCameraName}</p>
+            </Link>
           </div>
         </div>
         <div className="tools_box_main">

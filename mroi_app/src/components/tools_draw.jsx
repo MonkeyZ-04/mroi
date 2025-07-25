@@ -91,6 +91,7 @@ function Tools() {
   const [mousePosition, setMousePosition] = useState(null);
   const [openSaveModal, setOpenSaveModal] = useState(false);
   const [openDiscardModal, setOpenDiscardModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const showModalSave = () => setOpenSaveModal(true);
   const showModalDiscard = () => setOpenDiscardModal(true);
@@ -286,6 +287,7 @@ function Tools() {
   }, [imageObj]);
 
   const handleSave = async () => {
+    setIsSaving(true);
     const configToSave = JSON.parse(JSON.stringify(regionAIConfig));
 
     configToSave.docker_info = `ssh linaro@192.168.1.100 "docker restart ${selectedCameraName}"`;
@@ -329,6 +331,8 @@ function Tools() {
     } catch (error) {
       showNotification('error', 'Save Error', 'An error occurred while saving.', error.message);
       setOpenSaveModal(false);
+    } finally {
+        setIsSaving(false);
     }
   };
 
@@ -442,7 +446,15 @@ function Tools() {
               <p>This action cannot be undone.</p>
             </Modal>
             <Button onClick={showModalSave} type="primary">Apply</Button>
-            <Modal title={<span><ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} /> Apply Changes?</span>} open={openSaveModal} onOk={handleSave} onCancel={closeModal} okText="Confirm" cancelText="Cancel">
+            <Modal 
+              title={<span><ExclamationCircleFilled style={{ color: '#faad14', marginRight: 8 }} /> Apply Changes?</span>} 
+              open={openSaveModal} 
+              onOk={handleSave} 
+              onCancel={closeModal} 
+              okText="Confirm" 
+              cancelText="Cancel"
+              confirmLoading={isSaving}
+            >
               <p>This will update your data & restart the device.</p>
             </Modal>
           </div>

@@ -3,9 +3,10 @@ const { exec } = require('child_process');
 class SSHService {
   executeCommand(command) {
     const password = 'YOUR_PLAIN_TEXT_PASSWORD'; 
+    const remoteUser = 'something'; 
 
     const escapedCommand = command.replace(/"/g, '\\"');
-    const fullCommand = `sshpass -p '${password}' ${escapedCommand}`;
+    const fullCommand = `sshpass -p '${remoteUser}' ssh '${password}' ${escapedCommand}`;
 
     console.log(`Attempting to execute command...`);
 

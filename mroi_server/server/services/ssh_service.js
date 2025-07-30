@@ -1,31 +1,36 @@
-const { exec } = require('child_process');
-const { time } = require('console');
+const { NodeSSH } = require('node-ssh');
 
 class SSHService {
-  executeCommand(command) {
-    const password = 'test123'; 
-    const user = 'linaro'; 
-    const host = '192.168.1.100';
+  async executeCommand(command) {
+    const ssh = new NodeSSH();
 
-    const escapedCommand = command.replace(/"/g, '\\"');
-    const fullCommand = `sshpass -p '${password}' ssh ${user}@${host} "${escapedCommand}"`;
-    const options = {timeout: 5000};
+    const connectionConfig = {
+      host: '192.168.1.100',
+      username: 'linaro',
+      password: 'test123', // เปลี่ยนจากการใช้ privateKeyPath มาใช้ password โดยตรง
+      timeout: 5000
+    };
 
-    console.log(`Attempting to execute command...`);
+    console.log(`Attempting to execute on ${connectionConfig.host}: "${command}"`);
 
-    return new Promise((resolve, reject) => {
-      exec(fullCommand, options, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Execution Error: ${error.message}`);
-          return reject(new Error(error.message));
-        }
-        if (stderr) {
-          console.error(`STDERR: ${stderr}`);
-        }
-        console.log(`STDOUT: ${stdout}`);
-        resolve({ success: true, stdout, stderr });
-      });
-    });
+    try {
+      await ssh.connect(connectionConfig);
+      const result = await ssh.execCommand(command);
+
+      console.log('STDOUT: ' + result.stdout);
+      if (result.stderr && result.code !== 0) {
+        console.error('STDERR: ' + result.stderr);
+        throw new Error(result.stderr);
+      }
+      return { success: true, stdout: result.stdout, stderr: result.stderr };
+    } catch (error) {
+      console.error('SSH Execution Error:', error);
+      throw error;
+    } finally {
+      if (ssh.isConnected()) {
+        ssh.dispose();
+      }
+    }
   }
 }
 

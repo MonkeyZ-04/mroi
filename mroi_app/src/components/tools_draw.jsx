@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Button, Modal, Breadcrumb, notification } from 'antd';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { Link } from 'react-router-dom'; // 1. เพิ่มการ import Link เข้ามา
+import { Link } from 'react-router-dom';
 import {
   LeftOutlined,
   SaveOutlined,
@@ -299,8 +299,10 @@ function Tools() {
     setIsSaving(true);
     const configToSave = JSON.parse(JSON.stringify(regionAIConfig));
 
-    // configToSave.docker_info = `ssh linaro@192.168.1.100 "docker restart ${selectedCameraName}"`;
+    // --- VVVV --- ส่วนที่แก้ไข --- VVVV ---
+    // สร้างคำสั่ง docker restart โดยใช้ "cam3" ตามที่คุณต้องการ
     configToSave.docker_info = `docker restart cam3`;
+    // --- ^^^^ --- จบส่วนที่แก้ไข --- ^^^^ ---
 
     const reorderedRules = configToSave.rule.map(rule => {
       if (rule.roi_type === 'zoom') {
@@ -388,7 +390,6 @@ function Tools() {
     <>
       <div className="container_tools">
         <div className="header_tools_nav">
-          {/* 2. แก้ไข Breadcrumb */}
           <Breadcrumb 
             items={[
               { 
@@ -400,7 +401,6 @@ function Tools() {
             ]} 
           />
           <div className="device_control">
-            {/* 3. เปลี่ยนจาก a href เป็น Link to */}
             <Link to="/">
               <p className="cameraName_title"><LeftOutlined /> {selectedCameraName}</p>
             </Link>

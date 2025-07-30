@@ -1,7 +1,7 @@
 const cameraRepo = require("../repositories/iv_camera_repositorys");
 const ffmpegService = require("../services/ffmpeg_snapshot_service");
 const sshService = require("../services/ssh_service");
-const mqtt = require('mqtt'); // 1. Import library MQTT ที่เพิ่งติดตั้ง
+const mqtt = require('mqtt');
 
 exports.get_schemas_name = async (req, res) => {
   try {
@@ -53,30 +53,33 @@ exports.snapshot = (req, res) => {
 };
 
 
-// ======================= BLOCK ที่แก้ไข =======================
+// ======================= BLOCK ที่แก้ไขใหม่ทั้งหมด =======================
 exports.update_metthier_ai_config = async (req, res) => {
   const { customer, cameraId } = req.query;
-  const receivedConfig = req.body;
+  // รับข้อมูลจาก frontend มา แต่เราจะสนใจแค่ property 'rule' เท่านั้น
+  const { rule } = req.body; 
 
-  if (!customer || !cameraId || !receivedConfig) {
+  if (!customer || !cameraId || !rule) {
     return res.status(400).json({ message: 'Missing required fields.' });
   }
 
-  // แยก docker_info ออกมา
-  const dockerCommand = receivedConfig.docker_info;
-  const { docker_info, ...configToSave } = receivedConfig;
+  // สร้าง object ที่จะใช้บันทึกลง database ให้มีแค่ `rule`
+  const configToSave = { rule };
 
   try {
-    // บันทึก config ลง database (ส่วนนี้จะไม่มี docker_info แล้ว)
+    // 1. บันทึก config ใหม่ (ที่มีแค่ rule) ลง DB 
+    //    (ฟังก์ชัน update_metthier_ai_config ใน repository จะทำการ merge กับข้อมูลเดิมให้เอง)
     const affectedRows = await cameraRepo.update_metthier_ai_config(customer, cameraId, configToSave);
 
     if (affectedRows > 0) {
-      // 2. ตรวจสอบว่ามี dockerCommand หรือไม่
-      if (dockerCommand) {
-        // --- ถ้ามี docker_info: ให้รัน SSH ---
-        console.log('docker_info found, executing SSH command...');
+      // 2. หลังจากบันทึกสำเร็จ, อ่านข้อมูลทั้งหมดของกล้องตัวนั้นจาก DB กลับมาอีกครั้ง
+      const fullUpdatedConfig = await cameraRepo.get_roi_data(customer, cameraId);
+
+      // 3. ตรวจสอบ docker_info จากข้อมูลที่เพิ่งอ่านมาจาก DB
+      if (fullUpdatedConfig && fullUpdatedConfig.docker_info) {
+        console.log('docker_info found in database, executing SSH command...');
         try {
-          await sshService.executeCommand(dockerCommand);
+          await sshService.executeCommand(fullUpdatedConfig.docker_info);
           res.status(200).json({ message: 'Config saved and restart command sent successfully via SSH.' });
         } catch (sshError) {
           res.status(207).json({ 
@@ -85,36 +88,29 @@ exports.update_metthier_ai_config = async (req, res) => {
           });
         }
       } else {
-        // --- ถ้าไม่มี docker_info: ให้ส่ง MQTT ---
-        console.log('docker_info not found, sending MQTT message...');
+        // 4. ถ้าไม่เจอ docker_info ใน DB, ให้ส่ง MQTT
+        console.log('docker_info not found in database, sending MQTT message...');
         const mqttClient = mqtt.connect('mqtt://mqtt-open.metthier.ai:61883');
         
         mqttClient.on('connect', () => {
-          console.log('Connected to MQTT broker.');
           const topic = '/intrusion/motion_out';
           const message = JSON.stringify({ command: "restart" });
           
           mqttClient.publish(topic, message, (err) => {
             if (err) {
               console.error('MQTT publish error:', err);
-              if (!res.headersSent) {
-                res.status(500).json({ message: 'Config saved, but failed to send restart command via MQTT.' });
-              }
+              if (!res.headersSent) res.status(500).json({ message: 'Config saved, but MQTT publish failed.' });
             } else {
               console.log(`Message sent to topic: ${topic}`);
-              if (!res.headersSent) {
-                res.status(200).json({ message: 'Config saved and restart command sent successfully via MQTT.' });
-              }
+              if (!res.headersSent) res.status(200).json({ message: 'Config saved and restart command sent successfully via MQTT.' });
             }
-            mqttClient.end(); // ปิดการเชื่อมต่อหลังส่งเสร็จ
+            mqttClient.end();
           });
         });
 
         mqttClient.on('error', (err) => {
             console.error('MQTT connection error:', err);
-            if (!res.headersSent) {
-                res.status(500).json({ message: 'Config saved, but failed to connect to MQTT broker.' });
-            }
+            if (!res.headersSent) res.status(500).json({ message: 'Config saved, but MQTT connection failed.' });
             mqttClient.end();
         });
       }
@@ -122,10 +118,10 @@ exports.update_metthier_ai_config = async (req, res) => {
       res.status(404).json({ message: 'Save failed: No matching camera found to update.' });
     }
   } catch (err) {
-    console.error(err);
+    console.error('Error in update_metthier_ai_config:', err);
     if (!res.headersSent) {
         res.status(500).json({ message: 'Failed to save configuration.' });
     }
   }
 };
-// ===================== END BLOCK ที่แก้ไข =====================
+// ===================== END BLOCK ที่แก้ไขใหม่ทั้งหมด =====================

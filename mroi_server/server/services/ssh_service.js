@@ -5,10 +5,11 @@ class SSHService {
     const ssh = new NodeSSH();
 
     const connectionConfig = {
-      host: '192.168.1.100',
+      host: '49.0.85.146',
+      port: 822,
       username: 'linaro',
-      password: 'test123', // เปลี่ยนจากการใช้ privateKeyPath มาใช้ password โดยตรง
-      timeout: 5000
+      password: 'linaro',
+      timeout: 10000 // เพิ่ม timeout เป็น 10 วินาทีเผื่อการเชื่อมต่อช้า
     };
 
     console.log(`Attempting to execute on ${connectionConfig.host}: "${command}"`);

@@ -300,7 +300,7 @@ function Tools() {
     const configToSave = JSON.parse(JSON.stringify(regionAIConfig));
 
     // --- VVVV --- ส่วนที่แก้ไข --- VVVV ---
-    // สร้างคำสั่ง docker restart โดยใช้ "cam3" ตามที่คุณต้องการ
+    // สร้างคำสั่ง Docker เพียวๆ โดยไม่ต้องมี ssh นำหน้า
     configToSave.docker_info = `docker restart cam3`;
     // --- ^^^^ --- จบส่วนที่แก้ไข --- ^^^^ ---
 

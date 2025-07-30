@@ -310,7 +310,7 @@ function Tools() {
       if (Array.isArray(rule.schedule)) {
         const reorderedSchedules = rule.schedule.map(sch => ({
           surveillance_id: sch.surveillance_id,
-          ai_type: sch.ai_type,
+          ai_type: sch.ai_type ? sch.ai_type.toLowerCase() : "",
           start_time: sch.start_time,
           end_time: sch.end_time,
           direction: sch.direction,

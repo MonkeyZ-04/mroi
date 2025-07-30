@@ -129,7 +129,7 @@
     justify-content: end;
 }
 .text_alert_change_type p {
-    color: #ff0800; 
+    color: #ff0800;
     font-size: 12px;
   }
 .create_by_label{
@@ -143,19 +143,24 @@
     font-size: 14px;
     font-weight: 500;
 }
+
+/* --- VVVV ----- ส่วนที่แก้ไข ----- VVVV --- */
 .items_schedule{
     width: 100%;
     height: auto;
     min-height: 40px;
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
     justify-content: space-around;
     background-color: #f3f7fd;
-    transition: box-shadow 0.3s ease-in-out; 
+    transition: box-shadow 0.3s ease-in-out;
     border-radius: 5px;
     padding:5px 5px ;
+    flex-wrap: nowrap; /* เปลี่ยนเป็น nowrap เพื่อบังคับให้อยู่บรรทัดเดียว */
+    overflow-x: auto; /* เพิ่ม scrollbar แนวนอนถ้าเนื้อหาล้น */
 }
+/* --- ^^^^ ----------------------------- ^^^^ --- */
+
 .items_schedule:hover {
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     cursor: pointer;
@@ -254,3 +259,9 @@
   .custom-cancel-button{
     width: 30%;
   }
+
+@media (max-width: 1200px) {
+    .items_schedule {
+        flex-wrap: wrap; /* ทำให้กลับมาขึ้นบรรทัดใหม่เมื่อจอแคบ */
+    }
+}

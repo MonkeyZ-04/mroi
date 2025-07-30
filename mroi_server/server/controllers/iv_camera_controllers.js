@@ -88,7 +88,7 @@ exports.update_metthier_ai_config = async (req, res) => {
         };
         
         // สร้าง command โดยใช้ docker name จาก docker_info
-        const command = `docker restart ${fullUpdatedConfig.docker_info['docker name']}`;
+        const command = `docker restart ${fullUpdatedConfig.docker_info['docker_name']}`;
 
         try {
           // ส่งทั้ง connection details และ command ไปยัง service

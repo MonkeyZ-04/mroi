@@ -300,7 +300,7 @@ function Tools() {
     const configToSave = JSON.parse(JSON.stringify(regionAIConfig));
 
     // configToSave.docker_info = `ssh linaro@192.168.1.100 "docker restart ${selectedCameraName}"`;
-    configToSave.docker_info = `ssh linaro@49.0.85.146 "docker restart cam3"`;
+    configToSave.docker_info = `docker restart cam3`;
 
     const reorderedRules = configToSave.rule.map(rule => {
       if (rule.roi_type === 'zoom') {

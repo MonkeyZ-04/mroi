@@ -298,9 +298,10 @@ function Tools() {
   const handleSave = async () => {
     setIsSaving(true);
     const configToSave = JSON.parse(JSON.stringify(regionAIConfig));
+
     configToSave.docker_info = `ssh linaro@192.168.1.100 "docker restart ${selectedCameraName}"`;
 
-    const processedRules = configToSave.rule.map(rule => {
+    const reorderedRules = configToSave.rule.map(rule => {
       if (rule.roi_type === 'zoom') {
         const { schedule, roi_status, ...zoomRule } = rule;
         return zoomRule;
@@ -309,7 +310,7 @@ function Tools() {
       if (Array.isArray(rule.schedule)) {
         const reorderedSchedules = rule.schedule.map(sch => ({
           surveillance_id: sch.surveillance_id,
-          ai_type: sch.ai_type ? sch.ai_type.toLowerCase() : "", 
+          ai_type: sch.ai_type ? sch.ai_type.toLowerCase() : "",
           start_time: sch.start_time,
           end_time: sch.end_time,
           direction: sch.direction,

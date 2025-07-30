@@ -103,8 +103,8 @@ const Sidebar = ({
                         />
                       </span>
                     ) : (
-                      // แสดงผล span ว่างๆ เพื่อจองที่ให้ Layout เท่ากัน
-                      <span className="status_switch"></span>
+                      // แสดงผล div ว่างๆ ที่มีความกว้างเท่ากับ Switch เพื่อจองที่
+                      <div style={{ width: '44px', height: '22px' }} />
                     )}
                     {/* --- จบส่วนที่แก้ไข --- */}
                     <span

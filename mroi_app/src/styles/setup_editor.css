@@ -141,23 +141,19 @@
     font-weight: 500;
 }
 
-/* --- VVVV ----- ส่วนที่แก้ไข ----- VVVV --- */
 .items_schedule{
     width: 100%;
     height: auto;
     min-height: 40px;
     display: flex;
     flex-direction: row;
-    justify-content: space-between; /* เปลี่ยนจาก space-around */
-    align-items: center; /* จัดให้อยู่กลางแนวตั้ง */
+    align-items: center;
     background-color: #f3f7fd;
     transition: box-shadow 0.3s ease-in-out; 
     border-radius: 5px;
     padding: 5px;
-    gap: 5px; /* เพิ่ม gap เล็กน้อย */
-    flex-wrap: nowrap; /* ค่าเริ่มต้นคือไม่ขึ้นบรรทัดใหม่ */
+    gap: 10px;
 }
-/* --- ^^^^ ----------------------------- ^^^^ --- */
 
 .items_schedule:hover {
     box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
@@ -165,36 +161,40 @@
 }
 .info_schedule{
     display: flex;
-    flex-direction: row;
-    justify-content: start;
     align-items: center;
     gap: 3px;
-    min-width: 85px;
     font-size: 14px;
-    flex-shrink: 0; /* ไม่ให้ย่อขนาด */
+    white-space: nowrap; /* ป้องกันการตัดคำ */
 }
 .info_schedule_shot{
     display: flex;
-    flex-direction: row;
-    justify-content: start;
     align-items: center;
     gap: 3px;
-    min-width: 60px;
     font-size: 14px;
-    flex-shrink: 0; /* ไม่ให้ย่อขนาด */
+    white-space: nowrap; /* ป้องกันการตัดคำ */
 }
 .info_schedule_long{
     display: flex;
-    flex-direction: row;
-    justify-content: start;
-    overflow: hidden;
     align-items: center;
     gap: 3px;
-    min-width: 130px;
     font-size: 14px;
-    flex-grow: 1; /* ให้ขยายได้ */
-    flex-shrink: 1; /* ให้ย่อได้เมื่อจำเป็น */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1; /* ให้ยืดเต็มพื้นที่ที่เหลือ */
+    min-width: 100px; /* กำหนดความกว้างขั้นต่ำ */
 }
+
+/* --- VVVV ----- นี่คือส่วนสำคัญที่แก้ไข ----- VVVV --- */
+.delete_box{
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-left: auto; /* Trick สำคัญ: ดัน item นี้ไปทางขวาสุด */
+    padding-left: 10px; /* เพิ่มช่องว่างเล็กน้อย */
+}
+/* --- ^^^^ ----------------------------------- ^^^^ --- */
+
 
 .button_create_schedule {
     align-self: center;
@@ -210,11 +210,6 @@
     background-color: white  !important;
     color: #f1560e !important;
     border-color: #fd6e2b !important;
-  }
-  .delete_box{
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
   }
 
   .input_box{
@@ -259,10 +254,12 @@
     width: 30%;
   }
 
-/* --- VVVV ----- ส่วนที่เพิ่มเข้ามาใหม่สำหรับ Responsive ----- VVVV --- */
+/* Responsive: ทำให้กลับมาขึ้นบรรทัดใหม่เมื่อจอแคบ */
 @media (max-width: 1200px) {
     .items_schedule {
-        flex-wrap: wrap; /* ทำให้กลับมาขึ้นบรรทัดใหม่เมื่อจอแคบ */
+        flex-wrap: wrap; 
+    }
+    .delete_box {
+      margin-left: 0; /* ยกเลิกการดันไปทางขวาเมื่อจอแคบ */
     }
 }
-/* --- ^^^^ --------------------------------- ^^^^ --- */

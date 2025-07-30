@@ -85,11 +85,12 @@ const Sidebar = ({
                   <span className="item_type">
                     {region.roi_type === 'intrusion' && (<Tag className='button_show_type' color="red"><ImportOutlined /> Intrusion</Tag>)}
                     {region.roi_type === 'tripwire' && (<Tag className='button_show_type' color="cyan"><VerticalAlignMiddleOutlined /> Tripwire</Tag>)}
-                    {region.roi_type === 'zoom' && (<Tag className='button_show_type' color="gold"><ExpandOutlined />Zoom</Tag>)}
+                    {region.roi_type === 'zoom' && (<Tag className='button_show_type' color="gold"><ExpandOutlined /> Zoom</Tag>)}
                     {region.roi_type === 'density' && (<Tag className='button_show_type' color="geekblue"><TeamOutlined /> Density</Tag>)}
                   </span>
                   <div className="tools_setup_item">
-                    {region.roi_type !== 'zoom' && (
+                    {/* --- **ส่วนที่แก้ไข** --- */}
+                    {region.roi_type !== 'zoom' ? (
                       <span className="status_switch">
                         <Switch
                           checked={region.roi_status === 'ON'}
@@ -101,7 +102,11 @@ const Sidebar = ({
                           style={{ backgroundColor: region.roi_status === 'ON' ? '#4fce66' : '#adb4c1' }}
                         />
                       </span>
+                    ) : (
+                      // แสดงผล span ว่างๆ เพื่อจองที่ให้ Layout เท่ากัน
+                      <span className="status_switch"></span>
                     )}
+                    {/* --- จบส่วนที่แก้ไข --- */}
                     <span
                       className="bin"
                       onClick={(e) => {

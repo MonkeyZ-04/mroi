@@ -1,14 +1,16 @@
 const { NodeSSH } = require('node-ssh');
 
 class SSHService {
-  async executeCommand(command) {
+  // รับ connectionDetails และ command เป็นพารามิเตอร์
+  async executeCommand(connectionDetails, command) {
     const ssh = new NodeSSH();
 
+    // ใช้ connectionDetails ที่รับเข้ามา
     const connectionConfig = {
-      host: '49.0.85.146',
-      port: 822,
-      username: 'linaro',
-      password: 'linaro',
+      host: connectionDetails.host,
+      port: connectionDetails.port,
+      username: connectionDetails.username,
+      password: connectionDetails.password,
       timeout: 10000 // เพิ่ม timeout เป็น 10 วินาทีเผื่อการเชื่อมต่อช้า
     };
 
@@ -16,6 +18,7 @@ class SSHService {
 
     try {
       await ssh.connect(connectionConfig);
+      // ใช้ command ที่รับเข้ามา
       const result = await ssh.execCommand(command);
 
       console.log('STDOUT: ' + result.stdout);

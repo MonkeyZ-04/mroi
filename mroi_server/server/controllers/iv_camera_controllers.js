@@ -76,10 +76,23 @@ exports.update_metthier_ai_config = async (req, res) => {
       const fullUpdatedConfig = await cameraRepo.get_roi_data(customer, cameraId);
 
       // 3. ตรวจสอบ docker_info จากข้อมูลที่เพิ่งอ่านมาจาก DB
-      if (fullUpdatedConfig && fullUpdatedConfig.docker_info) {
+      if (fullUpdatedConfig && fullUpdatedConfig.docker_info && typeof fullUpdatedConfig.docker_info === 'object') {
         console.log('docker_info found in database, executing SSH command...');
+        
+        // สร้าง object สำหรับเชื่อมต่อ SSH จาก docker_info
+        const connectionDetails = {
+          host: fullUpdatedConfig.docker_info.ip,
+          port: fullUpdatedConfig.docker_info.port,
+          username: fullUpdatedConfig.docker_info.user,
+          password: fullUpdatedConfig.docker_info.pass
+        };
+        
+        // สร้าง command โดยใช้ docker name จาก docker_info
+        const command = `docker restart ${fullUpdatedConfig.docker_info['docker name']}`;
+
         try {
-          await sshService.executeCommand(fullUpdatedConfig.docker_info);
+          // ส่งทั้ง connection details และ command ไปยัง service
+          await sshService.executeCommand(connectionDetails, command);
           res.status(200).json({ message: 'Config saved and restart command sent successfully via SSH.' });
         } catch (sshError) {
           res.status(207).json({ 

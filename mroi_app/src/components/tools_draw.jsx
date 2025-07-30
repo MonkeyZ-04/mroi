@@ -299,11 +299,6 @@ function Tools() {
     setIsSaving(true);
     const configToSave = JSON.parse(JSON.stringify(regionAIConfig));
 
-    // --- VVVV --- ส่วนที่แก้ไข --- VVVV ---
-    // สร้างคำสั่ง Docker เพียวๆ โดยไม่ต้องมี ssh นำหน้า
-    configToSave.docker_info = `docker restart cam3`;
-    // --- ^^^^ --- จบส่วนที่แก้ไข --- ^^^^ ---
-
     const reorderedRules = configToSave.rule.map(rule => {
       if (rule.roi_type === 'zoom') {
         const { schedule, roi_status, ...zoomRule } = rule;

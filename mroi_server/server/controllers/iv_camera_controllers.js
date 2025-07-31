@@ -45,54 +45,36 @@ exports.get_cameras_data = async (req, res) => {
   }
 };
 
+// --- VVVV --- ส่วนที่แก้ไข --- VVVV ---
 exports.snapshot = (req, res) => {
-  const { rtsp } = req.query;
+  const { rtsp, w, h } = req.query; // รับค่า w และ h เพิ่มเข้ามา
   
   if (!rtsp) return res.status(400).send("RTSP URL is required");
-  ffmpegService.captureSnapshot(rtsp, res);
+  ffmpegService.captureSnapshot(rtsp, res, w, h); // ส่งค่า w และ h ไปให้ service
 };
+// --- ^^^^ --- จบส่วนที่แก้ไข --- ^^^^ ---
 
 
-// ======================= BLOCK ที่แก้ไขใหม่ทั้งหมด =======================
 exports.update_metthier_ai_config = async (req, res) => {
   const { customer, cameraId } = req.query;
-  // รับข้อมูลจาก frontend มา แต่เราจะสนใจแค่ property 'rule' เท่านั้น
   const { rule } = req.body; 
 
   if (!customer || !cameraId || !rule) {
     return res.status(400).json({ message: 'Missing required fields.' });
   }
 
-  // สร้าง object ที่จะใช้บันทึกลง database ให้มีแค่ `rule`
   const configToSave = { rule };
 
   try {
-    // 1. บันทึก config ใหม่ (ที่มีแค่ rule) ลง DB 
-    //    (ฟังก์ชัน update_metthier_ai_config ใน repository จะทำการ merge กับข้อมูลเดิมให้เอง)
     const affectedRows = await cameraRepo.update_metthier_ai_config(customer, cameraId, configToSave);
 
     if (affectedRows > 0) {
-      // 2. หลังจากบันทึกสำเร็จ, อ่านข้อมูลทั้งหมดของกล้องตัวนั้นจาก DB กลับมาอีกครั้ง
       const fullUpdatedConfig = await cameraRepo.get_roi_data(customer, cameraId);
 
-      // 3. ตรวจสอบ docker_info จากข้อมูลที่เพิ่งอ่านมาจาก DB
-      if (fullUpdatedConfig && fullUpdatedConfig.docker_info && typeof fullUpdatedConfig.docker_info === 'object') {
+      if (fullUpdatedConfig && fullUpdatedConfig.docker_info) {
         console.log('docker_info found in database, executing SSH command...');
-        
-        // สร้าง object สำหรับเชื่อมต่อ SSH จาก docker_info
-        const connectionDetails = {
-          host: fullUpdatedConfig.docker_info.ip,
-          port: fullUpdatedConfig.docker_info.port,
-          username: fullUpdatedConfig.docker_info.user,
-          password: fullUpdatedConfig.docker_info.pass
-        };
-        
-        // สร้าง command โดยใช้ docker name จาก docker_info
-        const command = `docker restart ${fullUpdatedConfig.docker_info['docker_name']}`;
-
         try {
-          // ส่งทั้ง connection details และ command ไปยัง service
-          await sshService.executeCommand(connectionDetails, command);
+          await sshService.executeCommand(fullUpdatedConfig.docker_info);
           res.status(200).json({ message: 'Config saved and restart command sent successfully via SSH.' });
         } catch (sshError) {
           res.status(207).json({ 
@@ -101,7 +83,6 @@ exports.update_metthier_ai_config = async (req, res) => {
           });
         }
       } else {
-        // 4. ถ้าไม่เจอ docker_info ใน DB, ให้ส่ง MQTT
         console.log('docker_info not found in database, sending MQTT message...');
         const mqttClient = mqtt.connect('mqtt://mqtt-open.metthier.ai:61883');
         
@@ -137,4 +118,3 @@ exports.update_metthier_ai_config = async (req, res) => {
     }
   }
 };
-// ===================== END BLOCK ที่แก้ไขใหม่ทั้งหมด =====================

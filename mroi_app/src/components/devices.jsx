@@ -134,6 +134,7 @@ function Devices({ onCameraSelect, onCustomerSelect, onSiteSelect }) {
         ROI_status: hasActiveRules,
         action: rules.length > 0,
         rtsp: device.rtsp,
+        resolution: device.metthier_ai_config?.resolution // <-- **บรรทัดที่เพิ่มเข้ามา**
       };
     });
   }, [selectedSite, searchText, allDeviceData, selectedCustomer]);

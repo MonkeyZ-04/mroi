@@ -26,7 +26,10 @@ const MAX_ZOOM_REGION = parseInt(import.meta.env.VITE_MAX_ZOOM_REGION);
 
 const migrateRuleFormat = (rule, index) => {
   const isNewFormat = !!rule.roi_type;
-  const roiType = isNewFormat ? rule.roi_type : rule.type;
+
+  if (isNewFormat) return rule;
+
+  const roiType = (rule.type || '').toLowerCase();
 
   if (roiType === 'zoom') {
     const newRule = {
@@ -44,16 +47,14 @@ const migrateRuleFormat = (rule, index) => {
     return newRule;
   }
 
-  if (isNewFormat) return rule;
-
   const newRule = {
     points: rule.points,
-    roi_type: rule.type,
-    name: `Rule ${index + 1}`,
-    roi_id: uuidv4(),
-    created_date: new Date().toLocaleDateString("en-GB"),
-    created_by: CREATOR,
-    roi_status: rule.status || 'OFF',
+    roi_type: roiType,
+    name: rule.name || `Rule ${index + 1}`,
+    roi_id: rule.roi_id || uuidv4(),
+    created_date: rule.created_date || new Date().toLocaleDateString("en-GB"),
+    created_by: rule.created_by || CREATOR,
+    roi_status: (rule.status || 'OFF').toUpperCase(),
     schedule: [],
   };
 
@@ -155,12 +156,20 @@ function Tools() {
           return;
       };
       try {
-        const rtspLink = deviceData.rtsp;
-        const res = await fetch(`${API_ENDPOINT}/snapshot?rtsp=${encodeURIComponent(rtspLink)}`, {
+        // --- VVVV --- ส่วนที่แก้ไข --- VVVV ---
+        let apiUrl = `${API_ENDPOINT}/snapshot?rtsp=${encodeURIComponent(deviceData.rtsp)}`;
+
+        // ตรวจสอบว่ามี resolution หรือไม่ แล้วเพิ่มเข้าไปใน URL
+        if (deviceData.resolution && deviceData.resolution.w && deviceData.resolution.h) {
+            apiUrl += `&w=${deviceData.resolution.w}&h=${deviceData.resolution.h}`;
+        }
+
+        const res = await fetch(apiUrl, {
             headers: {
               'ngrok-skip-browser-warning': 'true'
             }
         });
+        // --- ^^^^ --- จบส่วนที่แก้ไข --- ^^^^ ---
         
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({ message: 'Failed to parse error response.' }));
@@ -298,6 +307,8 @@ function Tools() {
   const handleSave = async () => {
     setIsSaving(true);
     const configToSave = JSON.parse(JSON.stringify(regionAIConfig));
+
+    configToSave.docker_info = `docker restart ${selectedCameraName}`;
 
     const reorderedRules = configToSave.rule.map(rule => {
       if (rule.roi_type === 'zoom') {
